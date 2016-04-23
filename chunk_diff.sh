@@ -23,6 +23,12 @@ EOF
 set -euo pipefail
 IFS=$'\n\t'
 
+tmpdir=$(mktemp -d -t tmp.chunk_diff.XXXXXXXXXX)
+function finish {
+  rm -rf "$tmpdir"
+}
+trap finish EXIT
+
 regex="([0-9]+)c([0-9]+)"
 
 nlines_1=0
@@ -63,10 +69,10 @@ for (( nc = 0; nc < ${nchunks}; nc++ )); do
     chunk_line_start=$(( $chunklines * $nc ))
     chunk_line_stop=$(( $chunklines * $(( nc + 1 )) ))
 
-    tmpfile1="$1.tmp.chunk$nc"
-    tmpfile2="$2.tmp.chunk$nc"
-    chunkfile1="$1.chunk$nc"
-    chunkfile2="$2.chunk$nc"
+    tmpfile1="$tmpdir/$1.tmp.chunk$nc"
+    tmpfile2="$tmpdir/$2.tmp.chunk$nc"
+    chunkfile1="$tmpdir/$1.chunk$nc"
+    chunkfile2="$tmpdir/$2.chunk$nc"
 
     if $debug; then
         echo "$chunk_line_start - $chunk_line_stop"
@@ -89,13 +95,15 @@ for (( nc = 0; nc < ${nchunks}; nc++ )); do
             echo "tail -n+$cls $1 | head -n$chunklines > $chunkfile1"
         fi
 
-        tail -n+$cls $1 > $tmpfile1
-        head -n$chunklines $tmpfile1 > $chunkfile1
+        # tail -n+$cls $1 > $tmpfile1
+        # head -n$chunklines $tmpfile1 > $chunkfile1
+        # tail -n+$cls $2 > $tmpfile2
+        # head -n$chunklines $tmpfile2 > $chunkfile2
+        # rm $tmpfile1 $tmpfile2
 
-        tail -n+$cls $2 > $tmpfile2
-        head -n$chunklines $tmpfile2 > $chunkfile2
+        tail -n+$cls $1 | head -n$chunklines > $chunkfile1 || true
+        tail -n+$cls $2 | head -n$chunklines > $chunkfile2 || true
 
-        rm $tmpfile1 $tmpfile2        
     fi
 
     diffstatus=$(diff -U 0 $chunkfile1 $chunkfile2 | grep -c '^@' || true)
