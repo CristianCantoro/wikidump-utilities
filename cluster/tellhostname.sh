@@ -234,7 +234,6 @@ python3 --version  > "$base_dir/host.$(hostname).python"
 command -v python3 > "$base_dir/host.$(hostname).whichpython"
 pip freeze         > "$base_dir/host.$(hostname).freeze"
 
-
-sleep 5m
+sleep 1m
 
 exit 0
