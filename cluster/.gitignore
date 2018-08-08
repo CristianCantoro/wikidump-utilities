@@ -1,0 +1,4 @@
+# ignore dev dir
+cluster/
+input/
+output/

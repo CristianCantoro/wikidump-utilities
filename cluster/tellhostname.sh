@@ -1,33 +1,238 @@
-#!/bin/bash
-set -x
+#!/usr/bin/env bash
+#shellcheck disable=SC2128
+SOURCED=false && [ "$0" = "$BASH_SOURCE" ] || SOURCED=true
 
-CLUSTER_USER='cristian.consonni'
+if ! $SOURCED; then
+  set -euo pipefail
+  IFS=$'\n\t'
+fi
+
+#################### helper
+# check if path is absolute
+# https://stackoverflow.com/a/20204890/2377454
+function is_abs_path() {
+  local isabs=false
+  local mydir="$1"
+
+  case $mydir in
+    /*)
+      # 0 is true
+      isabs=0
+      ;;
+    *)
+      # 1 is false
+      isabs=1
+      ;;
+  esac
+
+  return $isabs
+}
+
+function check_dir() {
+  local mydir="$1"
+
+  if [[ ! -d "$mydir" ]]; then
+    (>&2 echo "$mydir is not a valid directory.")
+    exit 1
+  fi
+  if ! is_abs_path "$mydir"; then
+    (>&2 echo "$mydir is not an absolute path.")
+    exit 1
+  fi
+
+}
+####################
+
+#################### usage
+function short_usage() {
+  (>&2 echo \
+"Usage:
+  tellhostname.sh [options] -c CLUSTERDIR -i INPUTDIR -o OUTPUTDIR")
+}
+
+function usage() {
+  (>&2 short_usage )
+  (>&2 echo \
+"
+
+List interfaces with their IPv4 address, if none is specified list only the
+ones that are assigned an IPv4 address.
+
+If a interface with no address is specified then the string 'no address' is
+printed.
+
+Arguments:
+  -c CLUSTERDIR       Absolute path of the cluster directory to link.
+  -i INPUTDIR         Absolute path of the input directory to link.
+  -o OUTPUTDIR        Absolute path of the output directory to link.
+
+Options:
+  -d                  Enable debug output.
+  -p PYTHON_VERSION   Python version [default: 3.5].
+  -u CLUSTER_USER     Cluster user name [default: \$USER].
+  -v VENVNAME         Name of the python virtualenv [default: wikidump].
+  -h                  Show this help and exits.
+
+Example:
+  tellhostname.sh -v /mnt/nxdata/")
+}
+
+
+help_flag=false
+debug_flag=false
+
+CLUSTER_USER="$USER"
+
+# directories
+CLUSTERDIR=''
+INPUTDIR=''
+OUTPUTDIR=''
+
+clusterdir_unset=true
+outputdir_unset=true
+inputdir_unset=true
+
+VENVNAME='wikidump'
+PYTHON_VERSION='3.5'
+
+while getopts ":c:dhi:o:p:u:v:" opt; do
+  case $opt in
+    c)
+      clusterdir_unset=false
+      check_dir "$OPTARG"
+
+      CLUSTERDIR="$OPTARG"
+      ;;
+    i)
+      inputdir_unset=false
+      check_dir "$OPTARG"
+
+      INPUTDIR="$OPTARG"
+      ;;
+    o)
+      outputdir_unset=false
+      check_dir "$OPTARG"
+
+      OUTPUTDIR="$OPTARG"
+      ;;
+
+    d)
+      debug_flag=true
+      ;;
+    h)
+      help_flag=true
+      ;;
+    p)
+      pyver="$OPTARG"
+
+      if ! command -v "python${pyver}"; then
+        (2>& echo "Error. version $pyver of Python you requested seems not " )
+        (2>& echo "to be installed on this system." )
+        exit 1
+      fi
+
+      PYTHON_VERSION="$OPTARG"
+      ;;
+    v)
+      VENVNAME="$OPTARG"
+      ;;
+    u)
+      CLUSTER_USER="$OPTARG"
+      ;;
+    \?)
+      (>&2 echo "Error. Invalid option: -$OPTARG")
+      exit 1
+      ;;
+    :)
+      (>&2 echo "Error.Option -$OPTARG requires an argument.")
+      exit 1
+      ;;
+  esac
+done
+
+if $clusterdir_unset; then
+  (>&2 echo "Error. Option -c is required.")
+  short_usage
+  exit 1
+fi
+
+if $inputdir_unset; then
+  (>&2 echo "Error. Option -i is required.")
+  short_usage
+  exit 1
+fi
+
+if $outputdir_unset; then
+  (>&2 echo "Error. Option -o is required.")
+  short_usage
+  exit 1
+fi
+
+if $help_flag; then
+  usage
+  exit 0
+fi
+#################### end: usage
+
+#################### utils
+
+if $debug_flag; then
+  function echodebug() {
+    echo -en "[$(date '+%F_%k:%M:%S')][debug]\\t"
+    echo "$@" 1>&2
+  }
+else
+  function echodebug() { true; }
+fi
+####################
 
 echo "tellhostname.sh"
-mkdir -p /tmp/$CLUSTER_USER
+echodebug "CLUSTER_USER: $CLUSTER_USER"
+echodebug "CLUSTERDIR: $CLUSTERDIR"
+echodebug "OUTPUTDIR: $OUTPUTDIR"
+echodebug "INPUTDIR: $INPUTDIR"
+echodebug "VENVNAME: $VENVNAME"
+echodebug "PYTHON_VERSION: $PYTHON_VERSION)"
+echodebug "Python path: $(command -v "python${PYTHON_VERSION}")"
 
-SHARED_PATH="/tmp/$CLUSTER_USER/shared"
+set -x
 
-[ ! -L "$SHARED_PATH" -a -d "$SHARED_PATH" ] && rm -r "$SHARED_PATH"
+# create /tmp/cconsonni
+tmpdir="/tmp/$CLUSTER_USER"
+mkdir -p "$tmpdir"
 
-mkdir -p "$SHARED_PATH"
 
-ln -sf /mnt/voldisi/cconsonni/cluster/ "$SHARED_PATH/cluster"
-ln -sf /mnt/voldisi/datasets/dumps/en/20150901/ "$SHARED_PATH/input"
-ln -sf /mnt/voldisi/cconsonni/wikilink-output/ "$SHARED_PATH/output"
+# create /tmp/cconsonni/shared
+# making sure to eliminate it, if it was already present and it was not a
+# symbolic link.
+shared_path="/tmp/$CLUSTER_USER/shared"
+if [ ! -L "$shared_path" ] && [ -d "$shared_path" ]; then
+  rm -r "$shared_path"
+fi
+mkdir -p "$shared_path"
 
-BASE_DIR="$SHARED_PATH/cluster/tellhostname"
+# create symbolic links:
+#   <cluster_dir> -> /tmp/cconsonni/shared/cluster
+#   <input_dir>   -> /tmp/cconsonni/shared/input
+#   <output_dir>  -> /tmp/cconsonni/shared/output
+ln -sf "$CLUSTERDIR" "$shared_path/cluster"
+ln -sf "$INPUTDIR" "$shared_path/input"
+ln -sf "$OUTPUTDIR" "$shared_path/output"
 
-mkdir -p "$BASE_DIR"
+# create a working dir /tmp/cconsonni/shared/cluster/tellhostname
+base_dir="$shared_path/cluster/tellhostname"
+mkdir -p "$base_dir"
 
-cd "$BASE_DIR"
+# shellcheck disable=SC1090
+export VIRTUALENVWRAPPER_PYTHON=/usr/bin/python3.5
+source "$shared_path/cluster/$VENVNAME/bin/activate"
 
-export PATH="$SHARED_PATH/cluster/python3.5/bin:$PATH"
+hostname           >> "$base_dir/host.$(hostname)"
+python3 --version  >> "$base_dir/host.$(hostname).python"
+command -v python3 >> "$base_dir/host.$(hostname).whichpython"
+pip freeze         >> "$base_dir/host.$(hostname).freeze"
 
-source "$SHARED_PATH/cluster/wikidump-cluster/wdump/bin/activate"
 
-hostname >> "$BASE_DIR/host.$(hostname)"
-python --version >> "$BASE_DIR/host.$(hostname).python"
-pip freeze >> "$BASE_DIR/host.$(hostname).freeze"
 sleep 5m
-exit
+
+exit 0
