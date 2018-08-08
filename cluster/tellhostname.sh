@@ -7,7 +7,7 @@ if ! $SOURCED; then
   IFS=$'\n\t'
 fi
 
-#################### helper
+#################### helpers
 # check if path is absolute
 # https://stackoverflow.com/a/20204890/2377454
 function is_abs_path() {
@@ -41,7 +41,7 @@ function check_dir() {
   fi
 
 }
-####################
+#################### end: helpers
 
 #################### usage
 function short_usage() {
@@ -175,7 +175,6 @@ fi
 #################### end: usage
 
 #################### utils
-
 if $debug_flag; then
   function echodebug() {
     echo -en "[$(date '+%F_%k:%M:%S')][debug]\\t"
