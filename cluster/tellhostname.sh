@@ -229,10 +229,10 @@ export VIRTUALENVWRAPPER_PYTHON="$reference_python"
 # shellcheck disable=SC1090
 source "$shared_path/cluster/$VENVNAME/bin/activate"
 
-hostname           >> "$base_dir/host.$(hostname)"
-python3 --version  >> "$base_dir/host.$(hostname).python"
-command -v python3 >> "$base_dir/host.$(hostname).whichpython"
-pip freeze         >> "$base_dir/host.$(hostname).freeze"
+hostname           > "$base_dir/host.$(hostname)"
+python3 --version  > "$base_dir/host.$(hostname).python"
+command -v python3 > "$base_dir/host.$(hostname).whichpython"
+pip freeze         > "$base_dir/host.$(hostname).freeze"
 
 
 sleep 5m
