@@ -226,8 +226,11 @@ base_dir="$shared_path/cluster/tellhostname"
 mkdir -p "$base_dir"
 
 export VIRTUALENVWRAPPER_PYTHON="$reference_python"
+
+set +euo pipefail
 # shellcheck disable=SC1090
 source "$shared_path/cluster/$VENVNAME/bin/activate"
+set -euo pipefail
 
 hostname           > "$base_dir/host.$(hostname)"
 python3 --version  > "$base_dir/host.$(hostname).python"
