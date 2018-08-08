@@ -128,7 +128,9 @@ fi
 set +euo pipefail
 # shellcheck disable=SC1090
 source "$VENV_PATH/bin/activate"
-set -xeuo pipefail
+set -euo pipefail
 
-echo "$(hostname)" '==>' "$@"
-"$@"
+args=("$@")
+echo "$(hostname)" "==>" "${args[@]:2}"
+set -x
+"${args[@]:2}"
