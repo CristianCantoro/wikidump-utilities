@@ -193,7 +193,9 @@ echodebug "OUTPUTDIR: $OUTPUTDIR"
 echodebug "INPUTDIR: $INPUTDIR"
 echodebug "VENVNAME: $VENVNAME"
 echodebug "PYTHON_VERSION: $PYTHON_VERSION)"
-echodebug "Python path: $(command -v "python${PYTHON_VERSION}")"
+
+reference_python="$(command -v "python${PYTHON_VERSION}")"
+echodebug "reference Python path: $reference_python"
 
 set -x
 
@@ -223,8 +225,8 @@ ln -sf "$OUTPUTDIR" "$shared_path/output"
 base_dir="$shared_path/cluster/tellhostname"
 mkdir -p "$base_dir"
 
+export VIRTUALENVWRAPPER_PYTHON="$reference_python"
 # shellcheck disable=SC1090
-export VIRTUALENVWRAPPER_PYTHON=/usr/bin/python3.5
 source "$shared_path/cluster/$VENVNAME/bin/activate"
 
 hostname           >> "$base_dir/host.$(hostname)"
