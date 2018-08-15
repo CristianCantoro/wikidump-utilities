@@ -4,6 +4,14 @@
 #PBS -l select=1:ncpus=1
 #PBS -q cpuq
 
+#shellcheck disable=SC2128
+SOURCED=false && [ "$0" = "$BASH_SOURCE" ] || SOURCED=true
+
+if ! $SOURCED; then
+  set -euo pipefail
+  IFS=$'\n\t'
+fi
+
 #################### helpers
 # check if path is absolute
 # https://stackoverflow.com/a/20204890/2377454
