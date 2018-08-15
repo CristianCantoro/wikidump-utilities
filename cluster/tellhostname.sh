@@ -55,11 +55,10 @@ function usage() {
   (>&2 echo \
 "
 
-List interfaces with their IPv4 address, if none is specified list only the
-ones that are assigned an IPv4 address.
-
-If a interface with no address is specified then the string 'no address' is
-printed.
+Create symbolic links to the following directories:
+  - <cluster_dir> -> /tmp/cconsonni/shared/cluster
+  - <input_dir>   -> /tmp/cconsonni/shared/input
+  - <output_dir>  -> /tmp/cconsonni/shared/output
 
 Arguments:
   -c CLUSTERDIR       Absolute path of the cluster directory to link.
