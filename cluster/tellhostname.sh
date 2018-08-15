@@ -124,7 +124,7 @@ while getopts ":c:dhi:o:p:u:v:" opt; do
     p)
       pyver="$OPTARG"
 
-      if ! command -v "python${pyver}"; then
+      if ! command -v "python${pyver}" >/dev/null; then
         (2>& echo "Error. version $pyver of Python you requested seems not " )
         (2>& echo "to be installed on this system." )
         exit 1
