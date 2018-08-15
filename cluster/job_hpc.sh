@@ -183,6 +183,12 @@ echodebug "INPUTFILE: $INPUTFILE"
 echodebug "OUTPUTDIR: $OUTPUTDIR"
 echodebug "PYTHON_VERSION: $PYTHON_VERSION"
 
+########## start job
+echo "job running on: $(hostname)"
+
+# shellcheck disable=SC1090
+source "$VENV_PATH/bin/activate"
+
 reference_python="$(command -v "python${PYTHON_VERSION}")"
 echodebug "reference Python path: $reference_python"
 
@@ -190,12 +196,6 @@ if [ -z "$reference_python" ]; then
   (>&2 echo "Error. No reference Python found for version: $PYTHON_VERSION")
   exit 1
 fi
-
-########## start job
-echo "job running on: $(hostname)"
-
-# shellcheck disable=SC1090
-source "$VENV_PATH/bin/activate"
 
 # python3 -m wikidump \
 #   --output-compression 7z \
