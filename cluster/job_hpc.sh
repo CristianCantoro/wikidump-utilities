@@ -186,10 +186,6 @@ fi
 ####################
 
 ########## vars
-VENV_PATH="$HOME/ngi/wikidump/cluster/wlnew-venv"
-INPUTFILE="$HOME/ngi/wikidump/input"
-OUTPUTDIR="$HOME/ngi/wikidump/output"
-
 echodebug "INPUTFILE: $INPUTFILE"
 echodebug "OUTPUTDIR: $OUTPUTDIR"
 echodebug "PYTHON_VERSION: $PYTHON_VERSION"
