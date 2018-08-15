@@ -207,6 +207,8 @@ if [ -z "$reference_python" ]; then
   exit 1
 fi
 
+export PATH="$PATH:/home/cristian.consonni/usr/bin/:/home/cristian.consonni/usr/local/bin/"
+
 # python3 -m wikidump \
 #   --output-compression 7z \
 #     <input_files> \
