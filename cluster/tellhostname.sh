@@ -149,6 +149,11 @@ while getopts ":c:dhi:o:p:u:v:" opt; do
   esac
 done
 
+if $help_flag; then
+  usage
+  exit 0
+fi
+
 if $clusterdir_unset; then
   (>&2 echo "Error. Option -c is required.")
   short_usage
@@ -165,11 +170,6 @@ if $outputdir_unset; then
   (>&2 echo "Error. Option -o is required.")
   short_usage
   exit 1
-fi
-
-if $help_flag; then
-  usage
-  exit 0
 fi
 #################### end: usage
 
