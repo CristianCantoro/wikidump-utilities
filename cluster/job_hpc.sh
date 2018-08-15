@@ -105,8 +105,9 @@ inputfile_unset=true
 
 VENV_PATH="$PWD/wikidump"
 PYTHON_VERSION='3.6'
+LANGUAGE='en'
 
-while getopts ":dhi:o:p:v:" opt; do
+while getopts ":dhi:l:o:p:v:" opt; do
   case $opt in
     i)
       inputfile_unset=false
@@ -114,17 +115,20 @@ while getopts ":dhi:o:p:v:" opt; do
 
       INPUTFILE="$OPTARG"
       ;;
-    o)
-      outputdir_unset=false
-      check_dir "$OPTARG"
-
-      OUTPUTDIR="$OPTARG"
-      ;;
     d)
       debug_flag=true
       ;;
     h)
       help_flag=true
+      ;;
+    l)
+      LANGUAGE="$OPTARG"
+      ;;
+    o)
+      outputdir_unset=false
+      check_dir "$OPTARG"
+
+      OUTPUTDIR="$OPTARG"
       ;;
     p)
       pyver="$OPTARG"
@@ -186,10 +190,12 @@ VENV_PATH="$HOME/ngi/wikidump/cluster/wlnew-venv"
 INPUTFILE="$HOME/ngi/wikidump/input"
 OUTPUTDIR="$HOME/ngi/wikidump/output"
 
-echodebug "VENV_PATH: $VENV_PATH"
 echodebug "INPUTFILE: $INPUTFILE"
 echodebug "OUTPUTDIR: $OUTPUTDIR"
 echodebug "PYTHON_VERSION: $PYTHON_VERSION"
+echodebug "VENV_PATH: $VENV_PATH"
+
+echodebug "LANGUAGE: $LANGUAGE"
 
 ########## start job
 echo "job running on: $(hostname)"
@@ -213,7 +219,7 @@ fi
 $reference_python -m wikidump \
   --output-compression 7z \
       "$INPUTFILE" \
-      "$OUTPUTDIR"
-        extract-wikilinks -l en
+      "$OUTPUTDIR" \
+        extract-wikilinks -l "$LANGUAGE"
 
 exit 0
