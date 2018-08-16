@@ -216,5 +216,6 @@ while read -r infile; do
      -o "$OUTPUTDIR" \
      -p "$PYTHON_VERSION" \
      -l "$LANGUAGE"
+  set +x
 
 done < "$INPUT_LIST"
