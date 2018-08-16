@@ -173,8 +173,8 @@ fi
 #################### utils
 if $debug_flag; then
   function echodebug() {
-    echo -en "[$(date '+%F_%k:%M:%S')][debug]\\t"
-    echo "$@" 1>&2
+    (>&2 echo -en "[$(date '+%F_%k:%M:%S')][debug]\\t")
+    (>&2 echo "$@" 1>&2)
   }
 else
   function echodebug() { true; }
