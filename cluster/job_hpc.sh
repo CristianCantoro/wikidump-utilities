@@ -70,11 +70,7 @@ function usage() {
   (>&2 echo \
 "
 
-List interfaces with their IPv4 address, if none is specified list only the
-ones that are assigned an IPv4 address.
-
-If a interface with no address is specified then the string 'no address' is
-printed.
+Launch job on the HPC cluster, with input INPUTFILE and output OUTPUTDIR.
 
 Arguments:
   -i INPUTFILE        Absolute path of the input file.
