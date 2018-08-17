@@ -78,6 +78,8 @@ Options:
   -p PYTHON_VERSION   Python version [default: 3.6].
   -v VENV_PATH        Absolute path of the virtualenv directory
                       [default: \$PWD/wikidump].
+  -z                  Use gzip compression for the output
+                      [default: 7z compression].
   -h                  Show this help and exits.
 
 Example:
@@ -86,6 +88,7 @@ Example:
 
 help_flag=false
 debug_flag=false
+gzip_compression=false
 
 # directories
 INPUT_LIST=''
@@ -98,7 +101,7 @@ VENV_PATH="$PWD/wikidump"
 PYTHON_VERSION='3.6'
 LANGUAGE='en'
 
-while getopts ":dhi:l:o:p:v:" opt; do
+while getopts ":dhi:l:o:p:v:z" opt; do
   case $opt in
     i)
       inputlist_unset=false
@@ -135,6 +138,9 @@ while getopts ":dhi:l:o:p:v:" opt; do
     v)
       check_dir "$OPTARG"
       VENV_PATH="$OPTARG"
+      ;;
+    z)
+      gzip_compression=true
       ;;
     \?)
       (>&2 echo "Error. Invalid option: -$OPTARG")
@@ -194,6 +200,11 @@ echodebug "scriptdir: $scriptdir"
 inrgx='(.{2})wiki-([0-9]{8})-pages-meta-history([0-9]+)\.xml'
 inrgx+='-p([0-9]+)p([0-9]+)\.7z'
 
+compression_flag=''
+if $gzip_compression; then
+  compression_flag='-z'
+fi
+
 while read -r infile; do
   echo "Processing $infile ..."
 
@@ -215,7 +226,8 @@ while read -r infile; do
      -i "$infile" \
      -o "$OUTPUTDIR" \
      -p "$PYTHON_VERSION" \
-     -l "$LANGUAGE"
+     -l "$LANGUAGE" \
+     ${compression_flag:-}
   set +x
 
 done < "$INPUT_LIST"

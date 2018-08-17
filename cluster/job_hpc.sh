@@ -81,6 +81,8 @@ Options:
   -p PYTHON_VERSION   Python version [default: 3.6].
   -v VENV_PATH        Absolute path of the virtualenv directory
                       [default: \$PWD/wikidump].
+  -z                  Use gzip compression for the output
+                      [default: 7z compression].
   -h                  Show this help and exits.
 
 Example:
@@ -91,6 +93,7 @@ Example:
 
 help_flag=false
 debug_flag=false
+gzip_compression=false
 
 # directories
 INPUTFILE=''
@@ -103,7 +106,7 @@ VENV_PATH="$PWD/wikidump"
 PYTHON_VERSION='3.6'
 LANGUAGE='en'
 
-while getopts ":dhi:l:o:p:v:" opt; do
+while getopts ":dhi:l:o:p:v:z" opt; do
   case $opt in
     i)
       inputfile_unset=false
@@ -132,6 +135,9 @@ while getopts ":dhi:l:o:p:v:" opt; do
     v)
       check_dir "$OPTARG"
       VENV_PATH="$OPTARG"
+      ;;
+    z)
+      gzip_compression=true
       ;;
     \?)
       (>&2 echo "Error. Invalid option: -$OPTARG")
@@ -178,7 +184,6 @@ echodebug "INPUTFILE: $INPUTFILE"
 echodebug "OUTPUTDIR: $OUTPUTDIR"
 echodebug "PYTHON_VERSION: $PYTHON_VERSION"
 echodebug "VENV_PATH: $VENV_PATH"
-
 echodebug "LANGUAGE: $LANGUAGE"
 
 ########## start job
@@ -195,6 +200,14 @@ if [ -z "$reference_python" ]; then
   exit 1
 fi
 
+compression_method='7z'
+if $gzip_compression; then
+  compression_method='gzip'
+fi
+
+options=('--output-compression' "$compression_method")
+echodebug "Compression method:" "${options[@]}"
+
 export PATH="$PATH:/home/cristian.consonni/usr/bin/:/home/cristian.consonni/usr/local/bin/"
 
 # python3 -m wikidump \
@@ -203,7 +216,7 @@ export PATH="$PATH:/home/cristian.consonni/usr/bin/:/home/cristian.consonni/usr/
 #     <output_dir> \
 #       extract-wikilinks -l en
 $reference_python -m wikidump \
-  --output-compression 7z \
+  "${options[@]}" \
       "$INPUTFILE" \
       "$OUTPUTDIR" \
         extract-wikilinks -l "$LANGUAGE"
