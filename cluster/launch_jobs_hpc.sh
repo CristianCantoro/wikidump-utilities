@@ -8,6 +8,10 @@ if ! $SOURCED; then
   IFS=$'\n\t'
 fi
 
+declare -A job_choices=(
+ ['extract-wikilinks']=1  ['extract-redirects']=1
+)
+
 #################### helpers
 # check if path is absolute
 # https://stackoverflow.com/a/20204890/2377454
@@ -74,18 +78,20 @@ OUTPUTDIR.
 Arguments:
   -i INPUT_LIST       Absolute path of the input file.
   -o OUTPUTDIR        Absolute path of the output directory.
+  JOBNAME             Jobname to execute, choose from {extract-wikilinks, extract-redirects}.
 
 Options:
   -b                  Use bz2 compression for the output [default: 7z compression].
   -d                  Enable debug output.
-  -l LANGUAGE         Language of the input data [default: en].
   -p PYTHON_VERSION   Python version [default: 3.6].
   -v VENV_PATH        Absolute path of the virtualenv directory [default: \$PWD/wikidump].
   -z                  Use gzip compression for the output [default: 7z compression].
   -h                  Show this help and exits.
 
 Example:
-  launch_wikilink_extraction_hpc.sh  /home/cristian.consonni/input")
+  launch_jobs_hpc.sh  -i /home/user/input/input_list.txt \
+                      -o /home/user/output \
+                        extract-wikilinks -l en")
 }
 
 help_flag=false
@@ -93,9 +99,13 @@ debug_flag=false
 gzip_compression=false
 bz2_compression=false
 
-# directories
+# arguments
 INPUT_LIST=''
 OUTPUTDIR=''
+JOBNAME=''
+
+# job args
+declare -a jobargs
 
 outputdir_unset=true
 inputlist_unset=true
@@ -104,7 +114,7 @@ VENV_PATH="$PWD/wikidump"
 PYTHON_VERSION='3.6'
 LANGUAGE='en'
 
-while getopts ":bdhi:l:o:p:v:z" opt; do
+while getopts ":bdhi:o:p:v:z" opt; do
   case $opt in
     b)
       bz2_compression=true
@@ -120,9 +130,6 @@ while getopts ":bdhi:l:o:p:v:z" opt; do
       ;;
     h)
       help_flag=true
-      ;;
-    l)
-      LANGUAGE="$OPTARG"
       ;;
     o)
       outputdir_unset=false
@@ -181,6 +188,19 @@ if $bz2_compression && $gzip_compression; then
   short_usage
   exit 1
 fi
+
+# Shell Script: is mixing getopts with positional parameters possible?
+# https://stackoverflow.com/q/11742996/2377454
+numopt="$#"
+if (( numopt-OPTIND < 0 )) ; then
+  (>&2 echo "Error. Parameter JOBNAME is required.")
+  short_usage
+  exit 1
+fi
+
+JOBNAME="${*:$OPTIND:1}"
+check_choices "$JOBNAME"
+IFS=" " read -r -a jobargs <<< "${@:$OPTIND+1}"
 #################### end: usage
 
 #################### utils
@@ -196,15 +216,31 @@ fi
 
 scriptdir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
-#################### vars
-echodebug "INPUT_LIST: $INPUT_LIST"
-echodebug "OUTPUTDIR: $OUTPUTDIR"
-echodebug "PYTHON_VERSION: $PYTHON_VERSION"
-echodebug "VENV_PATH: $VENV_PATH"
-echodebug "LANGUAGE: $LANGUAGE"
+#################### debug info
+echodebug "Arguments:"
+echodebug "  * INPUT_LIST (-i): $INPUTFILE"
+echodebug "  * OUTPUTDIR (-o): $OUTPUTDIR"
+echodebug "  * JOBNAME: $JOBNAME"
+echodebug
+
+echodebug "Options:"
+echodebug "  * bz2_compression (-b): $bz2_compression"
+echodebug "  * debug_flag (-d): $debug_flag"
+echodebug "  * PYTHON_VERSION (-p): $PYTHON_VERSION"
+echodebug "  * VENV_PATH (-v): $VENV_PATH"
+echodebug "  * gzip_compression (-z): $gzip_compression"
+echodebug
+
+if $debug_flag; then
+  echodebug "Job args:"
+  for i in "${!jobargs[@]}"; do
+    echodebug "  - jobargs[$i]: " "${jobargs[$i]}"
+  done
+  echodebug
+fi
 
 echodebug "scriptdir: $scriptdir"
-#################### end: vars
+#################### end: debug info
 
 # input file regex:
 # (1)      (2)                          (3)      (4)    (5)
@@ -237,13 +273,13 @@ while read -r infile; do
   #   <scriptdir>/job_hpc.sh -v <venv_path> -i <input_file> -o <output_dir>
   set -x
   qsub -N "$jobname" -q cpuq -- \
-   "$scriptdir/job_wikilink_extraction_hpc.sh" \
+   "$scriptdir/job_hpc.sh" \
+     ${compression_flag:-} \
      -v "$VENV_PATH" \
      -i "$infile" \
      -o "$OUTPUTDIR" \
      -p "$PYTHON_VERSION" \
-     -l "$LANGUAGE" \
-     ${compression_flag:-}
+      "$JOBNAME" "${jobargs[@]:-}"
   set +x
 
 done < "$INPUT_LIST"
