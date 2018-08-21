@@ -243,7 +243,7 @@ scriptdir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
 #################### debug info
 echodebug "Arguments:"
-echodebug "  * INPUT_LIST (-i): $INPUTFILE"
+echodebug "  * INPUT_LIST (-i): $INPUT_LIST"
 echodebug "  * OUTPUTDIR (-o): $OUTPUTDIR"
 echodebug "  * JOBNAME: $JOBNAME"
 echodebug
