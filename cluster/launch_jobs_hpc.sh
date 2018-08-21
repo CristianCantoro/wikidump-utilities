@@ -8,10 +8,6 @@ if ! $SOURCED; then
   IFS=$'\n\t'
 fi
 
-declare -A job_choices=(
- ['extract-wikilinks']=1  ['extract-redirects']=1
-)
-
 #################### helpers
 # check if path is absolute
 # https://stackoverflow.com/a/20204890/2377454
@@ -56,6 +52,33 @@ function check_file() {
   fi
 
 }
+
+function array_contains () {
+    local seeking=$1; shift
+    local in=1
+    for element; do
+        if [[ "$element" == "$seeking" ]]; then
+            in=0
+            break
+        fi
+    done
+    return $in
+}
+
+function check_choices() {
+  local mychoice="$1"
+  declare -a choices="($2)"
+
+  set +u
+  if ! array_contains "$mychoice" "${choices[@]}"; then
+    (>&2 echo -n "$mychoice is not within acceptable choices: {")
+    (echo -n "${choices[@]}" | sed -re 's# #, #g' >&2)
+    (>&2 echo '}' )
+    exit 1
+  fi
+  set -u
+
+}
 #################### end: helpers
 
 #################### usage
@@ -93,6 +116,8 @@ Example:
                       -o /home/user/output \
                         extract-wikilinks -l en")
 }
+
+declare -a JOB_CHOICES=('extract-wikilinks' 'extract-redirects')
 
 help_flag=false
 debug_flag=false
@@ -199,7 +224,7 @@ if (( numopt-OPTIND < 0 )) ; then
 fi
 
 JOBNAME="${*:$OPTIND:1}"
-check_choices "$JOBNAME"
+check_choices "$JOBNAME" "${JOB_CHOICES[*]}"
 IFS=" " read -r -a jobargs <<< "${@:$OPTIND+1}"
 #################### end: usage
 
