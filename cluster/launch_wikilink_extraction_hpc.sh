@@ -75,6 +75,7 @@ Arguments:
 
 Options:
   -d                  Enable debug output.
+  -l LANGUAGE         Language of the input data [default: en].
   -p PYTHON_VERSION   Python version [default: 3.6].
   -v VENV_PATH        Absolute path of the virtualenv directory
                       [default: \$PWD/wikidump].
