@@ -58,7 +58,9 @@ function check_file() {
 function short_usage() {
   (>&2 echo \
 "Usage:
-  launch_wikilink_extraction_hpc.sh [options] -i INPUT_LIST -o OUTPUTDIR")
+  launch_wikilink_extraction_hpc.sh [options] ( -b | -z ) -i INPUT_LIST
+                                    -o OUTPUTDIR"
+  )
 }
 
 function usage() {
@@ -74,13 +76,12 @@ Arguments:
   -o OUTPUTDIR        Absolute path of the output directory.
 
 Options:
+  -b                  Use bz2 compression for the output [default: 7z compression].
   -d                  Enable debug output.
   -l LANGUAGE         Language of the input data [default: en].
   -p PYTHON_VERSION   Python version [default: 3.6].
-  -v VENV_PATH        Absolute path of the virtualenv directory
-                      [default: \$PWD/wikidump].
-  -z                  Use gzip compression for the output
-                      [default: 7z compression].
+  -v VENV_PATH        Absolute path of the virtualenv directory [default: \$PWD/wikidump].
+  -z                  Use gzip compression for the output [default: 7z compression].
   -h                  Show this help and exits.
 
 Example:
@@ -90,6 +91,7 @@ Example:
 help_flag=false
 debug_flag=false
 gzip_compression=false
+bz2_compression=false
 
 # directories
 INPUT_LIST=''
@@ -102,8 +104,11 @@ VENV_PATH="$PWD/wikidump"
 PYTHON_VERSION='3.6'
 LANGUAGE='en'
 
-while getopts ":dhi:l:o:p:v:z" opt; do
+while getopts ":bdhi:l:o:p:v:z" opt; do
   case $opt in
+    b)
+      bz2_compression=true
+      ;;
     i)
       inputlist_unset=false
       check_file "$OPTARG"
@@ -170,6 +175,12 @@ if $outputdir_unset; then
   short_usage
   exit 1
 fi
+
+if $bz2_compression && $gzip_compression; then
+  (>&2 echo "Options -b and -z are mutually exclusive.")
+  short_usage
+  exit 1
+fi
 #################### end: usage
 
 #################### utils
@@ -206,6 +217,10 @@ if $gzip_compression; then
   compression_flag='-z'
 fi
 
+if $bz2_compression; then
+  compression_flag='-b'
+fi
+
 while read -r infile; do
   echo "Processing $infile ..."
 
@@ -222,7 +237,7 @@ while read -r infile; do
   #   <scriptdir>/job_hpc.sh -v <venv_path> -i <input_file> -o <output_dir>
   set -x
   qsub -N "$jobname" -q cpuq -- \
-   "$scriptdir/job_hpc.sh" \
+   "$scriptdir/job_wikilink_extraction_hpc.sh" \
      -v "$VENV_PATH" \
      -i "$infile" \
      -o "$OUTPUTDIR" \
@@ -232,3 +247,5 @@ while read -r infile; do
   set +x
 
 done < "$INPUT_LIST"
+
+exit 0

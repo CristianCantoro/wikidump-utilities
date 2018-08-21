@@ -62,7 +62,9 @@ function check_file() {
 function short_usage() {
   (>&2 echo \
 "Usage:
-  job_hpc.sh [options] -i INPUTFILE -o OUTPUTDIR")
+  job_wikilink_extraction_hpc.sh [options] ( -b | -z ) -i INPUTFILE
+                                 -o OUTPUTDIR"
+  )
 }
 
 function usage() {
@@ -77,13 +79,12 @@ Arguments:
   -o OUTPUTDIR        Absolute path of the output directory.
 
 Options:
+  -b                  Use bz2 compression for the output [default: 7z compression].
   -d                  Enable debug output.
   -l LANGUAGE         Language of the input data [default: en].
   -p PYTHON_VERSION   Python version [default: 3.6].
-  -v VENV_PATH        Absolute path of the virtualenv directory
-                      [default: \$PWD/wikidump].
-  -z                  Use gzip compression for the output
-                      [default: 7z compression].
+  -v VENV_PATH        Absolute path of the virtualenv directory [default: \$PWD/wikidump].
+  -z                  Use gzip compression for the output [default: 7z compression].
   -h                  Show this help and exits.
 
 Example:
@@ -95,6 +96,7 @@ Example:
 help_flag=false
 debug_flag=false
 gzip_compression=false
+bz2_compression=false
 
 # directories
 INPUTFILE=''
@@ -107,8 +109,11 @@ VENV_PATH="$PWD/wikidump"
 PYTHON_VERSION='3.6'
 LANGUAGE='en'
 
-while getopts ":dhi:l:o:p:v:z" opt; do
+while getopts ":bdhi:l:o:p:v:z" opt; do
   case $opt in
+    b)
+      bz2_compression=true
+      ;;
     i)
       inputfile_unset=false
       check_file "$OPTARG"
@@ -167,6 +172,12 @@ if $outputdir_unset; then
   short_usage
   exit 1
 fi
+
+if $bz2_compression && $gzip_compression; then
+  (>&2 echo "Options -b and -z are mutually exclusive.")
+  short_usage
+  exit 1
+fi
 #################### end: usage
 
 #################### utils
@@ -204,6 +215,10 @@ fi
 compression_method='7z'
 if $gzip_compression; then
   compression_method='gzip'
+fi
+
+if $bz2_compression; then
+  compression_method='bz2'
 fi
 
 options=('--output-compression' "$compression_method")
