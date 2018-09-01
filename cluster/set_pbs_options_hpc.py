@@ -16,6 +16,22 @@ optional arguments:
                         Output file.
 
 example: ./set_pbs_options_hpc.py job_hpc.sh
+
+
+Subcommand `pbs`:
+
+usage: set_pbs_options_hpc.py SCRIPT pbs [-h] [-c PBS.NCPUS] [-n PBS.NODES]
+                                         [-w PBS.WALLTIME]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -c PBS.NCPUS, --ncpus PBS.NCPUS
+                        Number of cpus to request.
+  -n PBS.NODES, --nodes PBS.NODES
+                        Number of nodes to request.
+  -w PBS.WALLTIME, --walltime PBS.WALLTIME
+                        Max walltime for the job, a time period formatted as
+                        hh:mm:ss.
 """
 
 import sys
