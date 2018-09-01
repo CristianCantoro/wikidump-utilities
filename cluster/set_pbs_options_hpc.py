@@ -165,12 +165,12 @@ def split_l_option(option, line):
     line = line.replace('-l', '').strip()
 
     value = None
-    if option in ('select'):
+    if option in ('nodes'):
         splitline = line.split(':')
 
-        select_value = int([line for line in splitline
-                            if option in line][0].split('=')[-1])
-        value = {'select': select_value}
+        nodes_value = int([line for line in splitline
+                           if option in line][0].split('=')[-1])
+        value = {'nodes': nodes_value}
 
         properties = dict(prop.split('=') for prop in splitline[1:])
         value.update(properties)
@@ -192,8 +192,8 @@ def read_pbs_opts(pbs_lines):
             if optdict.get('-l', None) is None:
                 optdict['-l'] = dict()
 
-            if 'select' in line:
-                optdict['-l'].update(split_l_option('select', line))
+            if 'nodes' in line:
+                optdict['-l'].update(split_l_option('nodes', line))
             if 'walltime' in line:
                 optdict['-l'].update(split_l_option('walltime', line))
 
@@ -265,11 +265,11 @@ def main():
 
     if args.command == 'pbs':
         if args.pbs.ncpus:
-            optdict['-l']['select']['ncpus'] = args.pbs.ncpus
+            optdict['-l']['nodes']['ncpus'] = args.pbs.ncpus
         if args.pbs.procpernode:
-            optdict['-l']['select']['ppn'] = args.pbs.procpernode
+            optdict['-l']['nodes']['ppn'] = args.pbs.procpernode
         if args.pbs.nodes:
-            optdict['-l']['select']['select'] = args.pbs.nodes
+            optdict['-l']['nodes']['nodes'] = args.pbs.nodes
         if args.pbs.walltime:
             optdict['-l']['walltime'] = args.pbs.walltime
 
