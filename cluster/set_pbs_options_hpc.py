@@ -203,13 +203,6 @@ def main():
 
     scriptfile = args.SCRIPT
 
-    outfile = None
-    if args.output is None:
-        outfile = sys.stdout
-    else:
-        outfile = args.output.open('w+')
-    inplace = args.inplace if args.inplace else False
-
     pbs_lines = []
     other_lines = []
     pre_lines = []
@@ -234,6 +227,14 @@ def main():
             optdict['-l']['select']['select'] = args.pbs.nodes
         if args.pbs.walltime:
             optdict['-l']['walltime'] = args.pbs.walltime
+
+    outfile = None
+    if args.output is None and not args.inplace:
+        outfile = sys.stdout
+    elif args.inplace:
+        outfile = scriptfile.open('w+')
+    else:
+        outfile = args.output.open('w+')
 
     for line in pre_lines:
         print(line, file=outfile)
