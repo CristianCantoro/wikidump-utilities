@@ -114,8 +114,8 @@ Options:
   -h                  Show this help and exits.
 
 Example:
-  launch_jobs_hpc.sh  -i /home/user/input/input_list.txt \
-                      -o /home/user/output \
+  launch_jobs_hpc.sh  -i /home/user/input/input_list.txt \\
+                      -o /home/user/output \\
                         extract-wikilinks -l en")
 }
 
