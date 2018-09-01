@@ -1,4 +1,22 @@
 #!/usr/bin/env python
+"""
+usage: set_pbs_options_hpc.py [-h] [-i | -o OUTPUT] SCRIPT {pbs} ...
+
+Show and set PBS options for SCRIPT.
+
+positional arguments:
+  SCRIPT                Script where to show or set PBS options.
+  {pbs}
+    pbs                 Set pbs options.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -i, --inplace         Modify the input file in-place.
+  -o OUTPUT, --output OUTPUT
+                        Output file.
+
+example: ./set_pbs_options_hpc.py job_hpc.sh
+"""
 
 import sys
 import argparse
@@ -88,9 +106,7 @@ def cli_args():
                           help="Output file."
                           )
 
-    subparsers = parser.add_subparsers(help='sub-commands help',
-                                       dest="command"
-                                       )
+    subparsers = parser.add_subparsers(dest="command")
 
     pbsparser = subparsers.add_parser('pbs',
                                       help='Set pbs options.',
