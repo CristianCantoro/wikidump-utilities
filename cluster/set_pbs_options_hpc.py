@@ -29,6 +29,8 @@ optional arguments:
                         Number of cpus to request.
   -n PBS.NODES, --nodes PBS.NODES
                         Number of nodes to request.
+  -p PBS.PROCPERNODE, --procpernode PBS.PROCPERNODE
+                        Number of processes to allocate for each node.
   -w PBS.WALLTIME, --walltime PBS.WALLTIME
                         Max walltime for the job, a time period formatted as
                         hh:mm:ss.
@@ -121,6 +123,10 @@ def cli_args():
                           type=pathlib.Path,
                           help="Output file."
                           )
+    outgroup.add_argument("-p", "--only-pbs",
+                          action='store_true',
+                          help="Print only pbs options."
+                          )
 
     subparsers = parser.add_subparsers(dest="command")
 
@@ -136,6 +142,11 @@ def cli_args():
                            dest='pbs.nodes',
                            type=positive_int,
                            help="Number of nodes to request.",
+                           )
+    pbsparser.add_argument("-p", "--procpernode",
+                           dest='pbs.procpernode',
+                           type=positive_int,
+                           help="Number of processes to allocate for each node.",
                            )
     pbsparser.add_argument("-w", "--walltime",
                            dest='pbs.walltime',
@@ -255,6 +266,8 @@ def main():
     if args.command == 'pbs':
         if args.pbs.ncpus:
             optdict['-l']['select']['ncpus'] = args.pbs.ncpus
+        if args.pbs.procpernode:
+            optdict['-l']['select']['ppn'] = args.pbs.procpernode
         if args.pbs.nodes:
             optdict['-l']['select']['select'] = args.pbs.nodes
         if args.pbs.walltime:
@@ -268,13 +281,15 @@ def main():
     else:
         outfile = args.output.open('w+')
 
-    for line in pre_lines:
-        print(line, file=outfile)
+    if not args.only_pbs:
+        for line in pre_lines:
+            print(line, file=outfile)
  
     write_pbs_opts(optdict, outfile)
  
-    for line in other_lines:
-        print(line, file=outfile)
+    if not args.only_pbs:
+        for line in other_lines:
+            print(line, file=outfile)
 
 
 if __name__ == '__main__':
