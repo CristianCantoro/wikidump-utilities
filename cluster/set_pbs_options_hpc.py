@@ -78,13 +78,15 @@ def cli_args():
                         type=pathlib.Path,
                         help="Script where to show or set PBS options.",
                         )
-    parser.add_argument("-i", "--inplace",
-                        help="Modify the input file in-place.",
-                        )
-    parser.add_argument("-o", "--output",
-                        type=pathlib.Path,
-                        help="Output file.",
-                        )
+    outgroup = parser.add_mutually_exclusive_group()
+    outgroup.add_argument("-i", "--inplace",
+                          action='store_true',
+                          help="Modify the input file in-place."
+                          )
+    outgroup.add_argument("-o", "--output",
+                          type=pathlib.Path,
+                          help="Output file."
+                          )
 
     subparsers = parser.add_subparsers(help='sub-commands help',
                                        dest="command"
