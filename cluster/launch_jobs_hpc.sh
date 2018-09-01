@@ -106,7 +106,9 @@ Arguments:
 Options:
   -b                  Use bz2 compression for the output [default: 7z compression].
   -d                  Enable debug output.
+  -m PYTHON_MODULE    Python module to use to lauch the job [default: infer from jobname].
   -p PYTHON_VERSION   Python version [default: 3.6].
+  -q QUEUE            Queue name [default: cpuq].
   -v VENV_PATH        Absolute path of the virtualenv directory [default: \$PWD/wikidump].
   -z                  Use gzip compression for the output [default: 7z compression].
   -h                  Show this help and exits.
@@ -117,7 +119,15 @@ Example:
                         extract-wikilinks -l en")
 }
 
-declare -a JOB_CHOICES=('extract-wikilinks' 'extract-redirects')
+declare -A JOB_MAP=( ['extract-wikilinks']='wikidump' \
+                     ['extract-redirects']='wikidump' \
+                     ['extract-snapshot']='graphsnapshot' \
+                     )
+
+declare -a JOB_CHOICES=()
+for k in "${!JOB_MAP[@]}"; do
+  JOB_CHOICES+=("$k")
+done
 
 help_flag=false
 debug_flag=false
@@ -139,7 +149,13 @@ VENV_PATH="$PWD/wikidump"
 PYTHON_VERSION='3.6'
 LANGUAGE='en'
 
-while getopts ":bdhi:o:p:v:z" opt; do
+# Python module
+PYTHON_MODULE=''
+reference_module=''
+
+QUEUE='cpuq'
+
+while getopts ":bdhi:m:o:p:q:v:z" opt; do
   case $opt in
     b)
       bz2_compression=true
@@ -162,6 +178,9 @@ while getopts ":bdhi:o:p:v:z" opt; do
 
       OUTPUTDIR="$OPTARG"
       ;;
+    m)
+      PYTHON_MODULE="$OPTARG"
+      ;;
     p)
       pyver="$OPTARG"
 
@@ -172,6 +191,9 @@ while getopts ":bdhi:o:p:v:z" opt; do
       fi
 
       PYTHON_VERSION="$OPTARG"
+      ;;
+    q)
+      QUEUE="$OPTARG"
       ;;
     v)
       check_dir "$OPTARG"
@@ -226,6 +248,18 @@ fi
 JOBNAME="${*:$OPTIND:1}"
 check_choices "$JOBNAME" "${JOB_CHOICES[*]}"
 IFS=" " read -r -a jobargs <<< "${@:$OPTIND+1}"
+
+if [ -z "$PYTHON_MODULE" ]; then
+  reference_module="${JOB_MAP[$JOBNAME]}"
+else
+  reference_module="$PYTHON_MODULE"
+fi
+
+if [ -z "$PYTHON_MODULE" ]; then
+  (>&2 echo "Error. Could not infer PYTHON_MODULE.")
+  short_usage
+  exit 1
+fi
 #################### end: usage
 
 #################### utils
@@ -251,12 +285,15 @@ echodebug
 echodebug "Options:"
 echodebug "  * bz2_compression (-b): $bz2_compression"
 echodebug "  * debug_flag (-d): $debug_flag"
+echodebug "  * PYTHON_MODULE (-m): $PYTHON_MODULE"
 echodebug "  * PYTHON_VERSION (-p): $PYTHON_VERSION"
+echodebug "  * QUEUE (-q): $QUEUE"
 echodebug "  * VENV_PATH (-v): $VENV_PATH"
 echodebug "  * gzip_compression (-z): $gzip_compression"
 echodebug
 
 if $debug_flag; then
+  echodebug "inferred python module: $reference_module"
   echodebug "Job args:"
   for i in "${!jobargs[@]}"; do
     echodebug "  - jobargs[$i]: " "${jobargs[$i]}"
@@ -297,11 +334,12 @@ while read -r infile; do
   # qsub -N <jobname> -q cpuq -- \
   #   <scriptdir>/job_hpc.sh -v <venv_path> -i <input_file> -o <output_dir>
   set -x
-  qsub -N "$jobname" -q cpuq -- \
+  qsub -N "$jobname" -q "$QUEUE" -- \
    "$scriptdir/job_hpc.sh" \
      ${compression_flag:-} \
      -v "$VENV_PATH" \
      -i "$infile" \
+     -m "$reference_module" \
      -o "$OUTPUTDIR" \
      -p "$PYTHON_VERSION" \
       "$JOBNAME" "${jobargs[@]:-}"

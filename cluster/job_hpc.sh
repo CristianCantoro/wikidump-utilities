@@ -110,6 +110,7 @@ Options:
   -b                  Use bz2 compression for the output, incompatible with -z
                       [default: 7z compression].
   -d                  Enable debug output.
+  -m PYTHON_MODULE    Python module to use to lauch the job [default: infer from jobname].
   -p PYTHON_VERSION   Python version [default: 3.6].
   -v VENV_PATH        Absolute path of the virtualenv directory [default: \$PWD/wikidump].
   -z                  Use gzip compression for the output, incompatible with -b
@@ -122,7 +123,15 @@ Example:
               extract-wikilinks -l en")
 }
 
-declare -a JOB_CHOICES=('extract-wikilinks' 'extract-redirects')
+declare -A JOB_MAP=( ['extract-wikilinks']='wikidump' \
+                     ['extract-redirects']='wikidump' \
+                     ['extract-snapshot']='graphsnapshot' \
+                     )
+
+declare -a JOB_CHOICES=()
+for k in "${!JOB_MAP[@]}"; do
+  JOB_CHOICES+=("$k")
+done
 
 help_flag=false
 debug_flag=false
@@ -144,7 +153,11 @@ VENV_PATH="$PWD/wikidump"
 PYTHON_VERSION='3.6'
 LANGUAGE='en'
 
-while getopts ":bdhi:o:p:v:z" opt; do
+# Python module
+PYTHON_MODULE=''
+reference_module=''
+
+while getopts ":bdhi:m:o:p:v:z" opt; do
   case $opt in
     b)
       bz2_compression=true
@@ -166,6 +179,9 @@ while getopts ":bdhi:o:p:v:z" opt; do
       check_dir "$OPTARG"
 
       OUTPUTDIR="$OPTARG"
+      ;;
+    m)
+      PYTHON_MODULE="$OPTARG"
       ;;
     p)
       PYTHON_VERSION="$OPTARG"
@@ -223,6 +239,18 @@ fi
 JOBNAME="${*:$OPTIND:1}"
 check_choices "$JOBNAME" "${JOB_CHOICES[*]}"
 IFS=" " read -r -a jobargs <<< "${@:$OPTIND+1}"
+
+if [ -z "$PYTHON_MODULE" ]; then
+  reference_module="${JOB_MAP[$JOBNAME]}"
+else
+  reference_module="$PYTHON_MODULE"
+fi
+
+if [ -z "$PYTHON_MODULE" ]; then
+  (>&2 echo "Error. Could not infer PYTHON_MODULE.")
+  short_usage
+  exit 1
+fi
 #################### end: usage
 
 #################### utils
@@ -246,12 +274,14 @@ echodebug
 echodebug "Options:"
 echodebug "  * bz2_compression (-b): $bz2_compression"
 echodebug "  * debug_flag (-d): $debug_flag"
+echodebug "  * PYTHON_MODULE (-m): $PYTHON_MODULE"
 echodebug "  * PYTHON_VERSION (-p): $PYTHON_VERSION"
 echodebug "  * VENV_PATH (-v): $VENV_PATH"
 echodebug "  * gzip_compression (-z): $gzip_compression"
 echodebug
 
 if $debug_flag; then
+  echodebug "inferred python module: $reference_module"
   echodebug "Job args:"
   for i in "${!jobargs[@]}"; do
     echodebug "  - jobargs[$i]: " "${jobargs[$i]}"
@@ -306,7 +336,7 @@ fi
 #     <output_dir> \
 #       extract-wikilinks -l en
 set -x
-$reference_python -m wikidump \
+$reference_python -m "$reference_module" \
   "${options[@]}" \
       "$INPUTFILE" \
       "$OUTPUTDIR" \
