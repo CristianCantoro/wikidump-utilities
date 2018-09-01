@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #PBS -V
 #PBS -l walltime=24:00:00
-#PBS -l select=1:ncpus=1:ppn=1
+#PBS -l nodes=1:ncpus=1:ppn=1
 #PBS -q cpuq
 
 #shellcheck disable=SC2128
