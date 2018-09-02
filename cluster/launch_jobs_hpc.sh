@@ -31,13 +31,14 @@ function is_abs_path() {
 
 function check_dir() {
   local mydir="$1"
+  local option="$2"
 
   if [[ ! -d "$mydir" ]]; then
-    (>&2 echo "$mydir is not a valid directory.")
+    (>&2 echo "Error in option '$option': $mydir is not a valid directory.")
     exit 1
   fi
   if ! is_abs_path "$mydir"; then
-    (>&2 echo "$mydir is not an absolute path.")
+    (>&2 echo "Error in option '$option': $mydir is not an absolute path.")
     exit 1
   fi
 
@@ -45,9 +46,10 @@ function check_dir() {
 
 function check_file() {
   local myfile="$1"
+  local option="$2"
 
   if [[ ! -e "$myfile" ]]; then
-    (>&2 echo "$myfile is not a valid file.")
+    (>&2 echo "Error in option '$option': $myfile is not a valid file.")
     exit 1
   fi
 
@@ -79,14 +81,35 @@ function check_choices() {
   set -u
 
 }
+
+function check_posint() {
+  local re='^[0-9]+$'
+  local mynum="$1"
+  local option="$2"
+
+  if ! [[ "$mynum" =~ $re ]] ; then
+     (echo -n "Error in option '$option': " >&2)
+     (echo "must be a positive integer, got $mynum." >&2)
+     exit 1
+  fi
+
+  if ! [ "$mynum" -gt 0 ] ; then
+     (echo "Error in option '$option': must be positive, got $mynum." >&2)
+     exit 1
+  fi
+}
 #################### end: helpers
 
 #################### usage
 function short_usage() {
   (>&2 echo \
 "Usage:
-  launch_wikilink_extraction_hpc.sh [options] ( -b | -z ) -i INPUT_LIST
-                                    -o OUTPUTDIR"
+  launch_wikilink_extraction_hpc.sh [options] \\
+                                    [ -c PBS_NCPUS -n PBS_NODES ] \\
+                                    [ -b | -z ] \\
+                                    -i INPUT_LIST \\
+                                    -o OUTPUTDIR
+                                    JOBNAME"
   )
 }
 
@@ -105,11 +128,15 @@ Arguments:
 
 Options:
   -b                  Use bz2 compression for the output [default: 7z compression].
+  -c PBS_NCPUS        Number of PBS cpus to request (needs also -n and -P to be specified).
   -d                  Enable debug output.
   -m PYTHON_MODULE    Python module to use to lauch the job [default: infer from jobname].
+  -n PBS_NODES        Number of PBS nodes to request (needs also -c  and -P to be specified).
   -p PYTHON_VERSION   Python version [default: 3.6].
-  -q QUEUE            Queue name [default: cpuq].
+  -P PBS_PPN          Number of PBS processors per node to request (needs also -n  and -P to be specified).
+  -q PBS_QUEUE        PBS queue name [default: cpuq].
   -v VENV_PATH        Absolute path of the virtualenv directory [default: \$PWD/wikidump].
+  -w PBS_WALLTIME     Max walltime for the job, a time period formatted as hh:mm:ss.
   -z                  Use gzip compression for the output [default: 7z compression].
   -h                  Show this help and exits.
 
@@ -153,16 +180,31 @@ LANGUAGE='en'
 PYTHON_MODULE=''
 reference_module=''
 
-QUEUE='cpuq'
+# PBS
+pbs_nodes_set=false
+pbs_ppn_set=false
+pbs_ncpus_set=false
 
-while getopts ":bdhi:m:o:p:q:v:z" opt; do
+PBS_QUEUE='cpuq'
+PBS_NCPUS=''
+PBS_NODES=''
+PBS_PPN=''
+PBS_WALLTIME=''
+
+while getopts ":bc:dhi:m:n:o:p:P:q:v:w:z" opt; do
   case $opt in
     b)
       bz2_compression=true
       ;;
+    c)
+      check_posint "$OPTARG" '-c'
+
+      pbs_ncpus_set=true
+      PBS_NCPUS="$OPTARG"
+      ;;
     i)
       inputlist_unset=false
-      check_file "$OPTARG"
+      check_file "$OPTARG" '-i'
 
       INPUT_LIST="$OPTARG"
       ;;
@@ -172,14 +214,20 @@ while getopts ":bdhi:m:o:p:q:v:z" opt; do
     h)
       help_flag=true
       ;;
-    o)
-      outputdir_unset=false
-      check_dir "$OPTARG"
-
-      OUTPUTDIR="$OPTARG"
-      ;;
     m)
       PYTHON_MODULE="$OPTARG"
+      ;;
+    n)
+      check_posint "$OPTARG" '-n'
+
+      pbs_nodes_set=true
+      PBS_NODES="$OPTARG"
+      ;;
+    o)
+      outputdir_unset=false
+      check_dir "$OPTARG" '-o'
+
+      OUTPUTDIR="$OPTARG"
       ;;
     p)
       pyver="$OPTARG"
@@ -192,12 +240,22 @@ while getopts ":bdhi:m:o:p:q:v:z" opt; do
 
       PYTHON_VERSION="$OPTARG"
       ;;
+    P)
+      check_posint "$OPTARG" '-P'
+
+      pbs_ppn_set=true
+      PBS_PPN="$OPTARG"
+      ;;
     q)
-      QUEUE="$OPTARG"
+      PBS_QUEUE="$OPTARG"
       ;;
     v)
-      check_dir "$OPTARG"
+      check_dir "$OPTARG" '-v'
+
       VENV_PATH="$OPTARG"
+      ;;
+    w)
+      PBS_WALLTIME="$OPTARG"
       ;;
     z)
       gzip_compression=true
@@ -236,6 +294,22 @@ if $bz2_compression && $gzip_compression; then
   exit 1
 fi
 
+# PBS nodes, PBS ncpus and PBS ppn must be set all togheter.
+# A xor B == ( A or B ) && ( not ( A && B ) )
+if ($pbs_nodes_set || $pbs_ncpus_set) && \
+    ! ($pbs_nodes_set && $pbs_ncpus_set); then
+  (>&2 echo "Options -c, -n, -P must be specified togheter.")
+  short_usage
+  exit 1
+fi
+
+if ($pbs_nodes_set || $pbs_ppn_set) && \
+    ! ($pbs_nodes_set && $pbs_ppn_set); then
+  (>&2 echo "Options -c, -n, -P must be specified togheter.")
+  short_usage
+  exit 1
+fi
+
 # Shell Script: is mixing getopts with positional parameters possible?
 # https://stackoverflow.com/q/11742996/2377454
 numopt="$#"
@@ -255,7 +329,7 @@ else
   reference_module="$PYTHON_MODULE"
 fi
 
-if [ -z "$PYTHON_MODULE" ]; then
+if [ -z "$reference_module" ]; then
   (>&2 echo "Error. Could not infer PYTHON_MODULE.")
   short_usage
   exit 1
@@ -284,19 +358,23 @@ echodebug
 
 echodebug "Options:"
 echodebug "  * bz2_compression (-b): $bz2_compression"
+echodebug "  * PBS_NCPUS (-c): $PBS_NCPUS"
 echodebug "  * debug_flag (-d): $debug_flag"
 echodebug "  * PYTHON_MODULE (-m): $PYTHON_MODULE"
+echodebug "  * PBS_NODES (-n): $PBS_NODES"
 echodebug "  * PYTHON_VERSION (-p): $PYTHON_VERSION"
-echodebug "  * QUEUE (-q): $QUEUE"
+echodebug "  * PBS_PPN (-P): $PBS_PPN"
+echodebug "  * PBS_QUEUE (-q): $PBS_QUEUE"
 echodebug "  * VENV_PATH (-v): $VENV_PATH"
+echodebug "  * PBS_WALLTIME (-w): $PBS_WALLTIME"
 echodebug "  * gzip_compression (-z): $gzip_compression"
 echodebug
 
 if $debug_flag; then
-  echodebug "inferred python module: $reference_module"
-  echodebug "Job args:"
+  echodebug "=> inferred python module: $reference_module"
+  echodebug "=> Job args:"
   for i in "${!jobargs[@]}"; do
-    echodebug "  - jobargs[$i]: " "${jobargs[$i]}"
+    echodebug "    - jobargs[$i]: " "${jobargs[$i]}"
   done
   echodebug
 fi
@@ -319,6 +397,15 @@ if $bz2_compression; then
   compression_flag='-b'
 fi
 
+declare -a pbsoptions
+if [ ! -z "$PBS_WALLTIME" ]; then
+  pbsoptions+=('-l' "walltime=$PBS_WALLTIME")
+fi
+
+if [ ! -z "$PBS_NODES" ]; then
+  pbsoptions+=('-l' "nodes=$PBS_NODES:ncpus=$PBS_NCPUS:ppn=$PBS_PPN")
+fi
+
 while read -r infile; do
   echo "Processing $infile ..."
 
@@ -334,7 +421,7 @@ while read -r infile; do
   # qsub -N <jobname> -q cpuq -- \
   #   <scriptdir>/job_hpc.sh -v <venv_path> -i <input_file> -o <output_dir>
   set -x
-  qsub -N "$jobname" -q "$QUEUE" -- \
+  qsub -N "$jobname" -q "$PBS_QUEUE" "${pbsoptions[@]:-}" -- \
    "$scriptdir/job_hpc.sh" \
      ${compression_flag:-} \
      -v "$VENV_PATH" \
