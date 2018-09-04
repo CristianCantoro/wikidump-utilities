@@ -286,20 +286,19 @@ if $debug_flag; then
   for i in "${!jobargs[@]}"; do
     echodebug "  - jobargs[$i]: " "${jobargs[$i]}"
   done
+  echodebug
 fi
 #################### end: debug info
 
 ########## start job
 echo "job running on: $(hostname)"
 
-set +u
-
-echodebug -n "Activate virtualenv: source '$VENV_PATH/bin/activate'"
+set +ue
+echodebug "activate virtualenv: source '$VENV_PATH/bin/activate'"
 # shellcheck disable=SC1090
 source "$VENV_PATH/bin/activate"
 echodebug "... done!"
-
-set -u
+set -ue
 
 reference_python="$(command -v "python${PYTHON_VERSION}")"
 echodebug "reference Python path: $reference_python"
