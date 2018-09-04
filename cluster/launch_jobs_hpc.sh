@@ -399,7 +399,7 @@ if $bz2_compression; then
 fi
 
 debug_flag_job=''
-if debug_flag; then
+if $debug_flag; then
   debug_flag_job='-d'
 fi
 
