@@ -124,7 +124,8 @@ OUTPUTDIR.
 Arguments:
   -i INPUT_LIST       Absolute path of the input file.
   -o OUTPUTDIR        Absolute path of the output directory.
-  JOBNAME             Jobname to execute, choose from {extract-wikilinks, extract-redirects}.
+  JOBNAME             Jobname to execute, choose from {extract-wikilinks,
+                      extract-redirects, extract-snapshot}.
 
 Options:
   -b                  Use bz2 compression for the output [default: 7z compression].
