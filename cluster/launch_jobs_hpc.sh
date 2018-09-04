@@ -398,6 +398,11 @@ if $bz2_compression; then
   compression_flag='-b'
 fi
 
+debug_flag_job=''
+if debug_flag; then
+  debug_flag_job='-d'
+fi
+
 declare -a pbsoptions
 if [ ! -z "$PBS_WALLTIME" ]; then
   pbsoptions+=('-l' "walltime=$PBS_WALLTIME")
@@ -425,6 +430,7 @@ while read -r infile; do
   qsub -N "$jobname" -q "$PBS_QUEUE" "${pbsoptions[@]:-}" -- \
    "$scriptdir/job_hpc.sh" \
      ${compression_flag:-} \
+     ${debug_flag_job:-} \
      -v "$VENV_PATH" \
      -i "$infile" \
      -m "$reference_module" \
