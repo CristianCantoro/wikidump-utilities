@@ -293,8 +293,12 @@ fi
 echo "job running on: $(hostname)"
 
 set +u
+
+echodebug -n "Activate virtualenv: source '$VENV_PATH/bin/activate'"
 # shellcheck disable=SC1090
 source "$VENV_PATH/bin/activate"
+echodebug "... done!"
+
 set -u
 
 reference_python="$(command -v "python${PYTHON_VERSION}")"
