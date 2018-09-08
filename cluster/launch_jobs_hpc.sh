@@ -387,7 +387,10 @@ echodebug "scriptdir: $scriptdir"
 # (1)      (2)                          (3)      (4)    (5)
 # (en)wiki-(20180301)-pages-meta-history(1).xml-p(7640)p(9429).7z
 inrgx='(.{2})wiki-([0-9]{8})-pages-meta-history([0-9]+)\.xml'
-inrgx+='-p([0-9]+)p([0-9]+)\.7z'
+inrgx+='-p([0-9]+)p([0-9]+)(.*)\.(7z|gz|bz2)'
+
+inrgx2='(.{2})wiki-([0-9]{8})-pages-meta-history\.xml'
+inrgx2+='(.*)\.(7z|gz|bz2)'
 
 compression_flag=''
 if $gzip_compression; then
@@ -416,18 +419,27 @@ while read -r infile; do
   echo "Processing $infile ..."
 
   filename="$(basename "$infile")"
-  # jobname:
-  # enwiki-20180301-pages-meta-history1.xml-p7640p9429.7z \
-  #   -> en20180301-h1p7640p9429
-  jobname="$(echo "$filename" | sed -r 's/'"$inrgx"'/\1-\2-h\3p\4p\5/')"
+  pbsjobname="$filename"
+  if [[ "$filename" =~ $inrgx ]]; then
+    # cluster jobname:
+    # enwiki-20180301-pages-meta-history1.xml-p7640p9429.7z \
+    #   -> en20180301-h1p7640p9429
+    echodebug "inrgx: $inrgx"
+    pbsjobname="$(echo "$filename" | sed -r 's/'"$inrgx"'/\1-\2-h\3p\4p\5/')"
+  elif [[ "$filename" =~ $inrgx2 ]]; then
+    # svwiki-20180301-pages-meta-history.xml.7z.features.xml.gz \
+    #   -> sv20180301-h
+    echodebug "inrgx2: $inrgx2"
+    pbsjobname="$(echo "$filename" | sed -r 's/'"$inrgx2"'/\1-\2-h/')"
+  fi
 
   echodebug "filename: $filename"  
-  echodebug "jobname: $jobname"
+  echodebug "pbsjobname: $pbsjobname"
 
-  # qsub -N <jobname> -q cpuq -- \
+  # qsub -N <pbsjobname> -q cpuq -- \
   #   <scriptdir>/job_hpc.sh -v <venv_path> -i <input_file> -o <output_dir>
   set -x
-  qsub -N "$jobname" -q "$PBS_QUEUE" "${pbsoptions[@]:-}" -- \
+  qsub -N "$pbsjobname" -q "$PBS_QUEUE" "${pbsoptions[@]:-}" -- \
    "$scriptdir/job_hpc.sh" \
      ${compression_flag:-} \
      ${debug_flag_job:-} \
