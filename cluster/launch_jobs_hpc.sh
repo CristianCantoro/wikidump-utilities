@@ -432,6 +432,7 @@ while read -r infile; do
     echodebug "inrgx2: $inrgx2"
     pbsjobname="$(echo "$filename" | sed -r 's/'"$inrgx2"'/\1-\2-h/')"
   fi
+  pbsjobname="${JOBNAME}.${pbsjobname}"
 
   echodebug "filename: $filename"  
   echodebug "pbsjobname: $pbsjobname"
