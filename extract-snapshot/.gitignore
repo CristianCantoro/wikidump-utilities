@@ -1,0 +1,4 @@
+# ignore output directory
+output
+*.tar*
+
