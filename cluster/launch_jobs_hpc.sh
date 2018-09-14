@@ -56,15 +56,15 @@ function check_file() {
 }
 
 function array_contains () {
-    local seeking=$1; shift
-    local in=1
-    for element; do
-        if [[ "$element" == "$seeking" ]]; then
-            in=0
-            break
-        fi
-    done
-    return $in
+  local seeking=$1; shift
+  local in=1
+  for element; do
+      if [[ "$element" == "$seeking" ]]; then
+          in=0
+          break
+      fi
+  done
+  return $in
 }
 
 function check_choices() {
@@ -373,11 +373,15 @@ echodebug
 
 if $debug_flag; then
   echodebug "=> inferred python module: $reference_module"
-  echodebug "=> Job args:"
-  for i in "${!jobargs[@]}"; do
-    echodebug "    - jobargs[$i]: " "${jobargs[$i]}"
-  done
-  echodebug
+  if [ "${#jobargs[@]}" -gt '0' ] ; then
+    echodebug "=> Job args:"
+    for i in "${!jobargs[@]}"; do
+      echodebug "    - jobargs[$i]: " "${jobargs[$i]}"
+    done
+    echodebug
+  else
+    echodebug "=> No extra job args provided"
+  fi
 fi
 
 echodebug "scriptdir: $scriptdir"
