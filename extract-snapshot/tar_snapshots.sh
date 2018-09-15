@@ -5,12 +5,12 @@ SOURCED=false && [ "$0" = "$BASH_SOURCE" ] || SOURCED=true
 # arguments
 declare -a FILE
 OUTPUT_DIR=''
+
 # options
 debug=false
 input_ext=''
 dry_run=false
 output_compression=''
-verbose=false
 
 eval "$(docopts -V - -h - : "$@" <<EOF
 Usage: tar_snapshots.sh [options] ( -o OUTPUT_DIR | --output-dir OUTPUT_DIR )
@@ -28,12 +28,11 @@ Arguments:
   -o, --output-dir OUTPUT_DIR     Output directory.
 
 Options:
-  -c, {gzip,bz2,7z,None}, --output-compression {gzip,bz2,7z,None}
+  -c {gzip,bz2,7z,None}, --output-compression {gzip,bz2,7z,None}
                                   Output compression format [default: gzip].
   -d, --debug                     Enable debugging output.
-  -i, --input-ext INPUT_EXT       Input extensions [default: .gz].
+  -e, --input-ext INPUT_EXT       Input extensions [default: .gz].
   -n, --dry-run                   Do not output any file.
-  -v, --verbose                   Generate verbose output.
   -h, --help                      Show this help message and exits.
   --version                       Print version and copyright information.
 
@@ -70,10 +69,10 @@ echodebug "  * output dir (-o): $OUTPUT_DIR"
 echodebug
 
 echodebug "Options:"
+echodebug "  * output_compression (-c): $output_compression"
 echodebug "  * debug (-d): $debug"
-echodebug "  * input_ext (-i): $input_ext"
+echodebug "  * input_ext (-e): $input_ext"
 echodebug "  * dry run (-n): $dry_run"
-echodebug "  * verbose (-v): $verbose"
 echodebug
 
 compression_flag=''
@@ -108,7 +107,7 @@ for inputfile in "${FILE[@]}"; do
     filename=$(basename "$inputfile")
 
     verbose_flag=''
-    if $verbose; then
+    if $debug; then
       # if verbose, tar flags are set to 'vczf'
       verbose_flag='-v'
     fi
