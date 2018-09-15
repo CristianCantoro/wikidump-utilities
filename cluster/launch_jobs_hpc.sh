@@ -322,7 +322,7 @@ fi
 
 JOBNAME="${*:$OPTIND:1}"
 check_choices "$JOBNAME" "${JOB_CHOICES[*]}"
-IFS=" " read -r -a jobargs <<< "${@:$OPTIND+1}"
+IFS=' ' read -r -a jobargs <<< "${@:$OPTIND+1}"
 
 if [ -z "$PYTHON_MODULE" ]; then
   reference_module="${JOB_MAP[$JOBNAME]}"
