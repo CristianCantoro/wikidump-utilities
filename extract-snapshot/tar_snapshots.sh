@@ -136,14 +136,21 @@ for inputfile in "${FILE[@]}"; do
     # Reading output of a command into an array in Bash
     # https://stackoverflow.com/q/11426529/2377454
     if $debug; then
-      mapfile -t filestotar < <( find "$INPUT_DIR" \
-                                      -type f \
-                                      -regextype posix-extended \
-                                      -regex "$rgx" )
+      set -x
     fi
+    mapfile -t filestotar < <( find "$INPUT_DIR" \
+                                    -type f \
+                                    -regextype posix-extended \
+                                    -regex "$rgx" )
+    set +x
 
     output_tarname="$filename.features.csv.tar$compression_ext"
     echodebug "tar output: $output_dir/$output_tarname"
+
+    if [[ "${#filestotar[@]}" -lt 1 ]]; then
+      (>&2 echo "There are no files to tar, something as gone wrong." )
+      exit 2
+    fi
 
     if ! $dry_run; then
       if [ "${compression_flag:-}" == "7z" ]; then
