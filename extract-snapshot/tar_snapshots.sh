@@ -112,6 +112,9 @@ fi
 
 for inputfile in "${FILE[@]}"; do
   filename=$(basename "$inputfile")
+  dirname=$(dirname "$inputfile")
+
+  echodebug "dirname: $dirname"
   echodebug "filename: $filename"
 
   count="$( find "$INPUT_DIR" \
@@ -128,7 +131,7 @@ for inputfile in "${FILE[@]}"; do
     fi
 
     rgx="$INPUT_DIR/"
-    rgx+="$filename\\.features\\.xml\\.(gz|bz2|7z)"
+    rgx+="\\./(.*/)?$filename\\.features\\.xml\\.(gz|bz2|7z)"
     rgx+="\\.features\\.[0-9]{4}-[0-9]{2}-[0-9]{2}\\.csv$input_ext"
     # Reading output of a command into an array in Bash
     # https://stackoverflow.com/q/11426529/2377454
@@ -143,13 +146,17 @@ for inputfile in "${FILE[@]}"; do
     if ! $dry_run; then
       if [ "${compression_flag:-}" == "7z" ]; then
         set -x
-        tar --create --file - "${filestotar[@]}" | \
+        tar --create \
+            -C "$dirname" \
+            --file - \
+              "${filestotar[@]}" | \
           7z a -si "$output_dir/$output_tarname"
         set +x
       else
         set -x
         tar ${verbose_flag:-} ${compression_flag:-} \
             --create \
+            -C "$dirname" \
             --file "$output_dir/$output_tarname" \
               "${filestotar[@]}"
         set +x
