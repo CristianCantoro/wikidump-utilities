@@ -107,6 +107,7 @@ else
   echodebug "Skipping because -n (dry run) option given."
 fi
 
+declare -a filestocap
 if $debug; then
   set -x
   mapfile -t filestocat < <( grep -E "$DATE\\.csv$input_ext.?$" \
