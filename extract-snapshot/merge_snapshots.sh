@@ -121,6 +121,9 @@ if [ "${#filestocat[@]}" -gt 0 ]; then
 
   snapshot_file="snapshot.$DATE.csv$compression_ext"
 
+  if $debug; then
+    set -x
+  fi
   # save header in a temporary file
   zcat "${filestocat[0]}" | head -n1 > "$snapshot_header"
 
@@ -136,6 +139,7 @@ if [ "${#filestocat[@]}" -gt 0 ]; then
     sort -n "$snapshot_tmpfile" | \
       $output_compression >> "$snapshot_file"
   fi
+  set +x
 
 else
   (>&2 echo 'No files to cat, exiting.')
