@@ -112,6 +112,7 @@ fi
 
 for inputfile in "${FILE[@]}"; do
   filename=$(basename "$inputfile")
+  echodebug "filename: $filename"
 
   count="$( find "$INPUT_DIR" \
                 -type f \
