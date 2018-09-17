@@ -111,15 +111,15 @@ else
 fi
 
 for inputfile in "${FILE[@]}"; do
+  filename=$(basename "$inputfile")
+
   count="$( find "$INPUT_DIR" \
                 -type f \
-                -name "$inputfile*.csv$input_ext" \
+                -name "$filename*.csv$input_ext" \
                 -printf '.' | wc -c )"
   echodebug "count: $count"
 
   if [ "$count" -gt 0 ]; then
-    filename=$(basename "$inputfile")
-
     verbose_flag=''
     if $debug; then
       # if verbose, tar flags are set to 'vczf'
