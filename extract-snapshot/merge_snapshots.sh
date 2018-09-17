@@ -90,6 +90,8 @@ echodebug "  * input_ext (-e): $input_ext"
 echodebug "  * dry run (-n): $dry_run"
 echodebug "  * output directory (-o): $output_dir"
 echodebug
+echodebug "tempdir: $tempdir"
+echodebug
 
 if [[ ! -z "${compression_command+x}" ]]; then
   echodebug "  * output compression (-o): $output_compression"
@@ -127,13 +129,16 @@ if [ "${#filestocat[@]}" -gt 0 ]; then
   if $debug; then
     set -x
   fi
+
   # save header in a temporary file
-  zcat "${filestocat[0]}" | head -n1 > "$snapshot_header"
+  # This is the correct way to do it when set -o pipefail is set:
+  #   https://stackoverflow.com/a/41516237/2377454
+  head -n1 < <(zcat "${filestocat[0]}") > "$snapshot_header"
 
   touch "$snapshot_tmpfile"
   for afile in "${filestocat[@]}"; do
     echodebug "Processing file: $afile"
-    zcat "$afile" | tail -n+2 >> "$snapshot_tmpfile"
+    tail -n+2 < <(zcat "$afile") >> "$snapshot_tmpfile"
   done
   cat "$snapshot_header" "$snapshot_tmpfile" | sponge "$snapshot_tmpfile"
 
