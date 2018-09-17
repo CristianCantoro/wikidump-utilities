@@ -151,25 +151,27 @@ for inputfile in "${FILE[@]}"; do
       exit 2
     fi
 
+    if $debug; then
+      set -x
+    fi
+
     if ! $dry_run; then
       if [ "${compression_flag:-}" == "7z" ]; then
-        set -x
         tar --create \
             -C "$INPUT_DIR" \
             --file - \
               "${filestotar[@]}" | \
           7z a -si "$output_dir/$output_tarname"
-        set +x
       else
-        set -x
         tar ${verbose_flag:-} ${compression_flag:-} \
             --create \
             -C "$INPUT_DIR" \
             --file "$output_dir/$output_tarname" \
               "${filestotar[@]}"
-        set +x
       fi
     fi
+    set +x
+
   fi
 done
 
