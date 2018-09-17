@@ -39,8 +39,8 @@ Options:
   --version                       Print version and copyright information.
 
 Example:
-  ./tar_snapshots.sh -o tars \
-        output \
+  ./tar_snapshots.sh -o tars
+        output
         enwiki-20180301-pages-meta-history1.xml-p10p2115.7z
 ----
 tar_snapshots.sh 0.2
@@ -104,7 +104,11 @@ echodebug
 #################### end: info
 
 echodebug "Creating output dir: ${output_dir}"
-mkdir -p ${output_dir}
+if ! $dry_run; then
+  mkdir -p ${output_dir}
+else
+  echodebug "skipping because -n (dry run) option given."
+fi
 
 for inputfile in "${FILE[@]}"; do
   count="$( find "$INPUT_DIR" \
