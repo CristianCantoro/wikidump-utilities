@@ -142,11 +142,11 @@ if [ "${#filestocat[@]}" -gt 0 ]; then
   done
   cat "$snapshot_header" "$snapshot_tmpfile" | sponge "$snapshot_tmpfile"
 
-  echodebug "Finalize file $snapshot_file"
+  echodebug "Finalize file $output_dir/$snapshot_file"
 
   if ! $dry_run; then
     sort -n "$snapshot_tmpfile" | \
-      $output_compression >> "$snapshot_file"
+      $output_compression >> "$output_dir/$snapshot_file"
   fi
   set +x
 
