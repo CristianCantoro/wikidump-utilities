@@ -122,11 +122,11 @@ if [ "${#filestocat[@]}" -gt 0 ]; then
 
   snapshot_tmpfile="$tempdir/snapshot.$DATE.tmp.txt"
   snapshot_header="$tempdir/snapshot.$DATE.header.txt"
-  echo "snapshot_tmpfile: $snapshot_tmpfile"
-  echo "snapshot_header: $snapshot_header"
+  echodebug "snapshot_tmpfile: $snapshot_tmpfile"
+  echodebug "snapshot_header: $snapshot_header"
 
   snapshot_file="snapshot.$DATE.csv$compression_ext"
-  echo "snapshot_file: $snapshot_file"
+  echodebug "snapshot_file: $snapshot_file"
 
   # save header in a temporary file
   # This is the correct way to do it when set -o pipefail is set:
