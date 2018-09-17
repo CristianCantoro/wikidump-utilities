@@ -135,10 +135,12 @@ for inputfile in "${FILE[@]}"; do
     rgx+="\\.features\\.[0-9]{4}-[0-9]{2}-[0-9]{2}\\.csv$input_ext"
     # Reading output of a command into an array in Bash
     # https://stackoverflow.com/q/11426529/2377454
-    mapfile -t filestotar < <( find "$INPUT_DIR" \
-                                    -type f \
-                                    -regextype posix-extended \
-                                    -regex "$rgx" )
+    if $debug; then
+      mapfile -t filestotar < <( find "$INPUT_DIR" \
+                                      -type f \
+                                      -regextype posix-extended \
+                                      -regex "$rgx" )
+    fi
 
     output_tarname="$filename.features.csv.tar$compression_ext"
     echodebug "tar output: $output_dir/$output_tarname"
