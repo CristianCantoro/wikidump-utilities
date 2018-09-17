@@ -107,8 +107,12 @@ else
   echodebug "Skipping because -n (dry run) option given."
 fi
 
-mapfile -t filestocat < <( grep -E "$DATE\\.csv$input_ext.?$" \
-                                "$INPUT_FILE" )
+if $debug; then
+  set -x
+  mapfile -t filestocat < <( grep -E "$DATE\\.csv$input_ext.?$" \
+                               "$INPUT_FILE" )
+  set +x
+fi
 
 if [ "${#filestocat[@]}" -gt 0 ]; then
   snapshot_tmpfile="$tempdir/snapshot.$DATE.tmp.txt"
