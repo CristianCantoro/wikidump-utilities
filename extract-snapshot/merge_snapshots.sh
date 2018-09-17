@@ -118,8 +118,11 @@ if [ "${#filestocat[@]}" -gt 0 ]; then
 
   snapshot_tmpfile="$tempdir/snapshot.$DATE.tmp.txt"
   snapshot_header="$tempdir/snapshot.$DATE.header.txt"
+  echo "snapshot_tmpfile: $snapshot_tmpfile"
+  echo "snapshot_header: $snapshot_header"
 
   snapshot_file="snapshot.$DATE.csv$compression_ext"
+  echo "snapshot_file: $snapshot_file"
 
   if $debug; then
     set -x
