@@ -126,10 +126,6 @@ if [ "${#filestocat[@]}" -gt 0 ]; then
   snapshot_file="snapshot.$DATE.csv$compression_ext"
   echo "snapshot_file: $snapshot_file"
 
-  if $debug; then
-    set -x
-  fi
-
   # save header in a temporary file
   # This is the correct way to do it when set -o pipefail is set:
   #   https://stackoverflow.com/a/41516237/2377454
@@ -148,7 +144,6 @@ if [ "${#filestocat[@]}" -gt 0 ]; then
     sort -n "$snapshot_tmpfile" | \
       $output_compression >> "$output_dir/$snapshot_file"
   fi
-  set +x
 
 else
   (>&2 echo 'No files to cat, exiting.')
