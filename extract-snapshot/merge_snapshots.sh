@@ -11,6 +11,7 @@ output_compression=''
 debug=false
 input_ext=''
 dry_run=false
+output_dir='.'
 
 eval "$(docopts -V - -h - : "$@" <<EOF
 Usage: merge_snapshots.sh [options] INPUT_FILE DATE
@@ -25,6 +26,7 @@ Options:
   -d, --debug                     Enable debugging output.
   -e, --input-ext INPUT_EXT       Input extensions [default: .gz].
   -n, --dry-run                   Do not output any file.
+  -o, --output-dir OUTPUT_DIR     Output directory [default: .].
   -h, --help                      Show this help message and exits.
   --version                       Print version and copyright information.
 ----
@@ -86,6 +88,7 @@ echodebug "  * output_compression (-c): $output_compression"
 echodebug "  * debug (-d): $debug"
 echodebug "  * input_ext (-e): $input_ext"
 echodebug "  * dry run (-n): $dry_run"
+echodebug "  * output directory (-o): $output_dir"
 echodebug
 
 if [[ ! -z "${compression_command+x}" ]]; then
@@ -96,6 +99,13 @@ else
 fi
 
 echo "$DATE -> snapshot.$DATE.csv.gz"
+
+echodebug "Creating output dir: ${output_dir}"
+if ! $dry_run; then
+  mkdir -p ${output_dir}
+else
+  echodebug "Skipping because -n (dry run) option given."
+fi
 
 mapfile -t filestocat < <( grep -E "$DATE\\.csv$input_ext.?$" \
                                 "$INPUT_FILE" )
@@ -116,8 +126,11 @@ if [ "${#filestocat[@]}" -gt 0 ]; then
   cat "$snapshot_header" "$snapshot_tmpfile" | sponge "$snapshot_tmpfile"
 
   echodebug "Finalize file $snapshot_file"
-  sort -n "$snapshot_tmpfile" | \
-    $output_compression >> "$snapshot_file"
+
+  if ! $dry_run; then
+    sort -n "$snapshot_tmpfile" | \
+      $output_compression >> "$snapshot_file"
+  fi
 
 else
   (>&2 echo 'No files to cat, exiting.')

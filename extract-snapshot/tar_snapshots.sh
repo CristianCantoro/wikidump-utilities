@@ -113,7 +113,7 @@ echodebug "Creating output dir: ${output_dir}"
 if ! $dry_run; then
   mkdir -p ${output_dir}
 else
-  echodebug "skipping because -n (dry run) option given."
+  echodebug "Skipping because -n (dry run) option given."
 fi
 
 for inputfile in "${FILE[@]}"; do
