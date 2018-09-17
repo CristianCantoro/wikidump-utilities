@@ -114,10 +114,7 @@ for inputfile in "${FILE[@]}"; do
   echodebug "inputfile: $inputfile"
 
   filename=$(basename "$inputfile")
-  dirname=$(dirname "$inputfile")
-
   echodebug "filename: $filename"
-  echodebug "dirname: $dirname"
 
   count="$( find "$INPUT_DIR" \
                 -type f \
@@ -158,7 +155,7 @@ for inputfile in "${FILE[@]}"; do
       if [ "${compression_flag:-}" == "7z" ]; then
         set -x
         tar --create \
-            -C "$dirname" \
+            -C "$INPUT_DIR" \
             --file - \
               "${filestotar[@]}" | \
           7z a -si "$output_dir/$output_tarname"
@@ -167,7 +164,7 @@ for inputfile in "${FILE[@]}"; do
         set -x
         tar ${verbose_flag:-} ${compression_flag:-} \
             --create \
-            -C "$dirname" \
+            -C "$INPUT_DIR" \
             --file "$output_dir/$output_tarname" \
               "${filestotar[@]}"
         set +x
