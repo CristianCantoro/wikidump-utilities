@@ -163,11 +163,14 @@ for inputfile in "${FILE[@]}"; do
 
     if ! $dry_run; then
       if [ "${compression_flag:-}" == "7z" ]; then
+        # remove the output file otherwise it gets added two times
+        rm -f "$output_dir/$output_tarname"
+
         tar --create \
             -C "$INPUT_DIR" \
             --file - \
               "${filestotar[@]}" | \
-          7z a -si "$output_dir/$output_tarname"
+          7z a -si "$output_dir/$output_tarname" >/dev/null
       else
         tar ${verbose_flag:-} ${compression_flag:-} \
             --create \

@@ -145,8 +145,11 @@ if [ "${#filestocat[@]}" -gt 0 ]; then
 
   if ! $dry_run; then
     if [ "${output_compression:-}" == "7z" ]; then
+      # remove the output file otherwise it gets added two times
+      rm -f "$output_dir/$snapshot_file"
+
       sort -n "$snapshot_tmpfile" | \
-          7z a -si "$output_dir/$snapshot_file"
+          7z a -si "$output_dir/$snapshot_file" >/dev/null
     else
       sort -n "$snapshot_tmpfile" | \
         "$compression_command" > "$output_dir/$snapshot_file"
