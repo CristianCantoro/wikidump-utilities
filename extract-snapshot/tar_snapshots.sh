@@ -113,7 +113,7 @@ fi
 for inputfile in "${FILE[@]}"; do
   count="$( find "$INPUT_DIR" \
                 -type f \
-                -name "*.csv$input_ext" \
+                -name "$inputfile*.csv$input_ext" \
                 -printf '.' | wc -c )"
   echodebug "count: $count"
 
