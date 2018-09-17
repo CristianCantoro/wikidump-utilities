@@ -111,11 +111,13 @@ else
 fi
 
 for inputfile in "${FILE[@]}"; do
+  echodebug "inputfile: $inputfile"
+
   filename=$(basename "$inputfile")
   dirname=$(dirname "$inputfile")
 
-  echodebug "dirname: $dirname"
   echodebug "filename: $filename"
+  echodebug "dirname: $dirname"
 
   count="$( find "$INPUT_DIR" \
                 -type f \
@@ -131,7 +133,7 @@ for inputfile in "${FILE[@]}"; do
     fi
 
     rgx="$INPUT_DIR/"
-    rgx+="\\./(.*/)?$filename\\.features\\.xml\\.(gz|bz2|7z)"
+    rgx+="$filename\\.features\\.xml\\.(gz|bz2|7z)"
     rgx+="\\.features\\.[0-9]{4}-[0-9]{2}-[0-9]{2}\\.csv$input_ext"
     # Reading output of a command into an array in Bash
     # https://stackoverflow.com/q/11426529/2377454
