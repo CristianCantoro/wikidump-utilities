@@ -116,7 +116,7 @@ if $debug; then
 fi
 
 if [ "${#filestocat[@]}" -gt 0 ]; then
-  echo "$DATE -> snapshot.$DATE.csv.gz"
+  echo "$DATE -> snapshot.$DATE.csv$compression_ext"
 
   snapshot_tmpfile="$tempdir/snapshot.$DATE.tmp.txt"
   snapshot_header="$tempdir/snapshot.$DATE.header.txt"
