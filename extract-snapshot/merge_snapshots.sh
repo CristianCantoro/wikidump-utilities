@@ -60,6 +60,7 @@ else
 fi
 ####################
 
+compression_command=''
 compression_ext=''
 case "$output_compression" in
   "gzip")
@@ -71,7 +72,7 @@ case "$output_compression" in
     compression_ext='.bz2'
     ;;
   "7z")
-    compression_command='7z a -si'
+    unset compression_command
     compression_ext='.7z'
     ;;
   *)
@@ -143,8 +144,13 @@ if [ "${#filestocat[@]}" -gt 0 ]; then
   echodebug "Finalize file $output_dir/$snapshot_file"
 
   if ! $dry_run; then
-    sort -n "$snapshot_tmpfile" | \
-      $output_compression >> "$output_dir/$snapshot_file"
+    if [ "${output_compression:-}" == "7z" ]; then
+      sort -n "$snapshot_tmpfile" | \
+          7z a -si "$output_dir/$snapshot_file"
+    else
+      sort -n "$snapshot_tmpfile" | \
+        "$compression_command" > "$output_dir/$snapshot_file"
+    fi
   fi
 
 else
