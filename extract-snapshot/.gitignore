@@ -1,5 +1,8 @@
-# ignore output directory
-output
-*.tar*
-*.txt
+# ignore input/output directories
+output/
+tars/
+
+# ignore tar and txt files
+*\.tar*
+*\.txt
 

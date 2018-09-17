@@ -4,17 +4,17 @@ SOURCED=false && [ "$0" = "$BASH_SOURCE" ] || SOURCED=true
 
 # arguments
 declare -a FILE
-OUTPUT_DIR=''
+INPUT_DIR=''
 
 # options
 debug=false
-input_ext=''
 dry_run=false
+input_ext=''
 output_compression=''
+output_dir='.'
 
 eval "$(docopts -V - -h - : "$@" <<EOF
-Usage: tar_snapshots.sh [options] ( -o OUTPUT_DIR | --output-dir OUTPUT_DIR )
-                                  FILE [FILE ...]
+Usage: tar_snapshots.sh [options] INPUT_DIR FILE [FILE ...]
 
 Take all files of the form
   <output_dir>/<file>.*.<date>.csv.gz
@@ -25,7 +25,8 @@ Note that the idea is to tar all the files pertaining to a given input.
 
 Arguments:
   FILE                            File to parse.
-  -o, --output-dir OUTPUT_DIR     Output directory.
+  INPUT_DIR                       Input directory with the files produced by
+                                  graphsnapshot's extract-snapshoṫ.
 
 Options:
   -c {gzip,bz2,7z,None}, --output-compression {gzip,bz2,7z,None}
@@ -33,11 +34,14 @@ Options:
   -d, --debug                     Enable debugging output.
   -e, --input-ext INPUT_EXT       Input extensions [default: .gz].
   -n, --dry-run                   Do not output any file.
+  -o, --output-dir OUTPUT_DIR     Output directory [default: .].
   -h, --help                      Show this help message and exits.
   --version                       Print version and copyright information.
 
 Example:
-  ./tar_snapshots.sh -o output enwiki-20180301-pages-meta-history1.xml-p10p2115.7z
+  ./tar_snapshots.sh -o tars \
+        output \
+        enwiki-20180301-pages-meta-history1.xml-p10p2115.7z
 ----
 tar_snapshots.sh 0.2
 copyright (c) 2018 Cristian Consonni
@@ -63,18 +67,6 @@ else
 fi
 ####################
 
-echodebug "Arguments:"
-echodebug "  * FILE: $FILE"
-echodebug "  * output dir (-o): $OUTPUT_DIR"
-echodebug
-
-echodebug "Options:"
-echodebug "  * output_compression (-c): $output_compression"
-echodebug "  * debug (-d): $debug"
-echodebug "  * input_ext (-e): $input_ext"
-echodebug "  * dry run (-n): $dry_run"
-echodebug
-
 compression_flag=''
 compression_ext=''
 case "$output_compression" in
@@ -94,10 +86,28 @@ case "$output_compression" in
     unset compression_flag
     ;;
 esac
-echodebug "compression_flag: ${compression_flag:-None}"
+
+#################### info
+echodebug "Arguments:"
+echodebug "  * FILE: $FILE"
+echodebug "  * INPUT_DIR: $INPUT_DIR"
+echodebug
+
+echodebug "Options:"
+echodebug "  * output_compression (-c): $output_compression"
+echodebug "    -A compression_flag: ${compression_flag:-None}"
+echodebug "  * debug (-d): $debug"
+echodebug "  * input_ext (-e): $input_ext"
+echodebug "  * output_dir (-o): $output_dir"
+echodebug "  * dry run (-n): $dry_run"
+echodebug
+#################### end: info
+
+echodebug "Creating output dir: ${output_dir}"
+mkdir -p ${output_dir}
 
 for inputfile in "${FILE[@]}"; do
-  count="$( find "$OUTPUT_DIR" \
+  count="$( find "$INPUT_DIR" \
                 -type f \
                 -name "*.csv$input_ext" \
                 -printf '.' | wc -c )"
@@ -112,29 +122,30 @@ for inputfile in "${FILE[@]}"; do
       verbose_flag='-v'
     fi
 
-    rgx="$OUTPUT_DIR/"
+    rgx="$INPUT_DIR/"
     rgx+="$filename\\.features\\.xml\\.(gz|bz2|7z)"
     rgx+="\\.features\\.[0-9]{4}-[0-9]{2}-[0-9]{2}\\.csv$input_ext"
     # Reading output of a command into an array in Bash
     # https://stackoverflow.com/q/11426529/2377454
-    mapfile -t filestotar < <( find "$OUTPUT_DIR" \
+    mapfile -t filestotar < <( find "$INPUT_DIR" \
                                     -type f \
                                     -regextype posix-extended \
                                     -regex "$rgx" )
 
     output_tarname="$filename.features.csv.tar$compression_ext"
-    echodebug "output_tarname: $output_tarname"
+    echodebug "tar output: $output_dir/$output_tarname"
+
     if ! $dry_run; then
       if [ "${compression_flag:-}" == "7z" ]; then
         set -x
         tar --create --file - "${filestotar[@]}" | \
-          7z a -si "$output_tarname"
+          7z a -si "$output_dir/$output_tarname"
         set +x
       else
         set -x
         tar ${verbose_flag:-} ${compression_flag:-} \
             --create \
-            --file "$output_tarname" \
+            --file "$output_dir/$output_tarname" \
               "${filestotar[@]}"
         set +x
       fi
