@@ -98,8 +98,6 @@ else
   echodebug "  * output compression (-o): None"
 fi
 
-echo "$DATE -> snapshot.$DATE.csv.gz"
-
 echodebug "Creating output dir: ${output_dir}"
 if ! $dry_run; then
   mkdir -p "${output_dir}"
@@ -107,7 +105,7 @@ else
   echodebug "Skipping because -n (dry run) option given."
 fi
 
-declare -a filestocap
+declare -a filestocat
 if $debug; then
   set -x
   mapfile -t filestocat < <( grep -E "$DATE\\.csv$input_ext.?$" \
@@ -116,6 +114,8 @@ if $debug; then
 fi
 
 if [ "${#filestocat[@]}" -gt 0 ]; then
+  echo "$DATE -> snapshot.$DATE.csv.gz"
+
   snapshot_tmpfile="$tempdir/snapshot.$DATE.tmp.txt"
   snapshot_header="$tempdir/snapshot.$DATE.header.txt"
 
