@@ -13,12 +13,11 @@ input_ext=''
 dry_run=false
 
 eval "$(docopts -V - -h - : "$@" <<EOF
-Usage: merge_snapshots.sh [options] ( --input INPUT_FILE | -i INPUT_FILE )
-                                    DATE
+Usage: merge_snapshots.sh [options] INPUT_FILE DATE
 
 Arguments:
   DATE                            Date to merge.
-  -i, --input INPUT_FILE          Input file with list.
+  INPUT_FILE                      Input file with list of files to merge.
 
 Options:
   -c {gzip,bz2,7z,None}, --output-compression {gzip,bz2,7z,None}
@@ -79,7 +78,7 @@ case "$output_compression" in
 esac
 echodebug "Arguments:"
 echodebug "  * DATE: $DATE"
-echodebug "  * INPUT_FILE (-i): $INPUT_FILE"
+echodebug "  * INPUT_FILE: $INPUT_FILE"
 echodebug
 
 echodebug "Options:"

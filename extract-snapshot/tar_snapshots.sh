@@ -24,9 +24,9 @@ to produce a tar
 Note that the idea is to tar all the files pertaining to a given input.
 
 Arguments:
-  FILE                            File to parse.
   INPUT_DIR                       Input directory with the files produced by
                                   graphsnapshot's extract-snapshoṫ.
+  FILE                            File to parse.
 
 Options:
   -c {gzip,bz2,7z,None}, --output-compression {gzip,bz2,7z,None}
@@ -89,8 +89,14 @@ esac
 
 #################### info
 echodebug "Arguments:"
-echodebug "  * FILE: $FILE"
 echodebug "  * INPUT_DIR: $INPUT_DIR"
+echodebug "  * Files:"
+if $debug; then
+  for afile in "${FILE[@]}"; do
+    echodebug "    - $afile"
+  done
+fi
+
 echodebug
 
 echodebug "Options:"

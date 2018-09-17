@@ -5,4 +5,5 @@ tars/
 # ignore tar and txt files
 *\.tar*
 *\.txt
+*\.csv*
 
