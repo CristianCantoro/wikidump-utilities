@@ -130,9 +130,10 @@ if [ "${#filestocat[@]}" -gt 0 ]; then
   # save header in a temporary file
   zcat "${filestocat[0]}" | head -n1 > "$snapshot_header"
 
-  for file in "${filestocat[@]}"; do
-    echodebug "Processing file: $file"
-    zcat "$file" | tail -n+2 >> "$snapshot_tmpfile"
+  touch "$snapshot_tmpfile"
+  for afile in "${filestocat[@]}"; do
+    echodebug "Processing file: $afile"
+    zcat "$afile" | tail -n+2 >> "$snapshot_tmpfile"
   done
   cat "$snapshot_header" "$snapshot_tmpfile" | sponge "$snapshot_tmpfile"
 
