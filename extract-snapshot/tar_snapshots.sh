@@ -129,18 +129,20 @@ for inputfile in "${FILE[@]}"; do
       verbose_flag='-v'
     fi
 
-    rgx="$INPUT_DIR/"
-    rgx+="$filename\\.features\\.xml\\.(gz|bz2|7z)"
+
+    cd "$INPUT_DIR"
+    rgx="\\./$filename\\.features\\.xml\\.(gz|bz2|7z)"
     rgx+="\\.features\\.[0-9]{4}-[0-9]{2}-[0-9]{2}\\.csv$input_ext"
     # Reading output of a command into an array in Bash
     # https://stackoverflow.com/q/11426529/2377454
     if $debug; then
       set -x
     fi
-    mapfile -t filestotar < <( find "$INPUT_DIR" \
-                                    -type f \
-                                    -regextype posix-extended \
-                                    -regex "$rgx" )
+    mapfile -t filestotar < <( cd "$INPUT_DIR" && \
+                                 find '.' \
+                                   -type f \
+                                   -regextype posix-extended \
+                                   -regex "$rgx" )
     set +x
 
     output_tarname="$filename.features.csv.tar$compression_ext"
