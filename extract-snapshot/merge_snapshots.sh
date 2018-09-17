@@ -108,12 +108,14 @@ else
 fi
 
 declare -a filestocat
+filestocat=()
+
 if $debug; then
   set -x
-  mapfile -t filestocat < <( grep -E "$DATE\\.csv$input_ext.?$" \
-                               "$INPUT_FILE" )
-  set +x
 fi
+mapfile -t filestocat < <( grep -E "$DATE\\.csv$input_ext.?$" \
+                             "$INPUT_FILE" )
+set +x
 
 if [ "${#filestocat[@]}" -gt 0 ]; then
   echo "$DATE -> snapshot.$DATE.csv$compression_ext"
