@@ -95,7 +95,7 @@ echodebug
 
 echodebug "Options:"
 echodebug "  * output_compression (-c): $output_compression"
-echodebug "    -A compression_flag: ${compression_flag:-None}"
+echodebug "    -> compression_flag: ${compression_flag:-None}"
 echodebug "  * debug (-d): $debug"
 echodebug "  * input_ext (-e): $input_ext"
 echodebug "  * output_dir (-o): $output_dir"
@@ -129,8 +129,6 @@ for inputfile in "${FILE[@]}"; do
       verbose_flag='-v'
     fi
 
-
-    cd "$INPUT_DIR"
     rgx="\\./$filename\\.features\\.xml\\.(gz|bz2|7z)"
     rgx+="\\.features\\.[0-9]{4}-[0-9]{2}-[0-9]{2}\\.csv$input_ext"
     # Reading output of a command into an array in Bash
