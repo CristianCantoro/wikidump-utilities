@@ -102,7 +102,7 @@ echo "$DATE -> snapshot.$DATE.csv.gz"
 
 echodebug "Creating output dir: ${output_dir}"
 if ! $dry_run; then
-  mkdir -p ${output_dir}
+  mkdir -p "${output_dir}"
 else
   echodebug "Skipping because -n (dry run) option given."
 fi
@@ -134,6 +134,7 @@ if [ "${#filestocat[@]}" -gt 0 ]; then
 
 else
   (>&2 echo 'No files to cat, exiting.')
+  exit 2
 fi
 
 exit 0
