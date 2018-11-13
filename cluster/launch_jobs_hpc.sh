@@ -125,7 +125,7 @@ Arguments:
   -i INPUT_LIST       Absolute path of the input file.
   -o OUTPUTDIR        Absolute path of the output directory.
   JOBNAME             Jobname to execute, choose from {extract-wikilinks,
-                      extract-redirects, extract-snapshot}.
+                      extract-redirects, extract-revisionlist, extract-snapshot}.
 
 Options:
   -b                  Use bz2 compression for the output [default: 7z compression].
@@ -149,6 +149,7 @@ Example:
 
 declare -A JOB_MAP=( ['extract-wikilinks']='wikidump' \
                      ['extract-redirects']='wikidump' \
+                     ['extract-revisionlist']='wikidump' \
                      ['extract-snapshot']='graphsnapshot' \
                      )
 
@@ -340,7 +341,7 @@ fi
 #################### utils
 if $debug_flag; then
   function echodebug() {
-    (>&2 echo -en "[$(date '+%F_%k:%M:%S')][debug]\\t")
+    (>&2 echo -en "[$(date '+%F_%H:%M:%S')][debug]\\t")
     (>&2 echo "$@" 1>&2)
   }
 else
