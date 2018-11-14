@@ -104,7 +104,7 @@ function check_posint() {
 function short_usage() {
   (>&2 echo \
 "Usage:
-  launch_wikilink_extraction_hpc.sh [options] \\
+  launch_jobs_hpc.sh [options] \\
                                     [ -c PBS_NCPUS -n PBS_NODES ] \\
                                     [ -b | -z ] \\
                                     -i INPUT_LIST \\
@@ -133,6 +133,7 @@ Options:
   -d                  Enable debug output.
   -m PYTHON_MODULE    Python module to use to lauch the job [default: infer from jobname].
   -n PBS_NODES        Number of PBS nodes to request (needs also -c  and -P to be specified).
+  -N                  Dry run, do not really launch the jobs.
   -p PYTHON_VERSION   Python version [default: 3.6].
   -P PBS_PPN          Number of PBS processors per node to request (needs also -n  and -P to be specified).
   -q PBS_QUEUE        PBS queue name [default: cpuq].
@@ -162,6 +163,7 @@ help_flag=false
 debug_flag=false
 gzip_compression=false
 bz2_compression=false
+dryrun_flag=false
 
 # arguments
 INPUT_LIST=''
@@ -193,7 +195,7 @@ PBS_NODES=''
 PBS_PPN=''
 PBS_WALLTIME=''
 
-while getopts ":bc:dhi:m:n:o:p:P:q:v:w:z" opt; do
+while getopts ":bc:dhi:m:n:No:p:P:q:v:w:z" opt; do
   case $opt in
     b)
       bz2_compression=true
@@ -224,6 +226,9 @@ while getopts ":bc:dhi:m:n:o:p:P:q:v:w:z" opt; do
 
       pbs_nodes_set=true
       PBS_NODES="$OPTARG"
+      ;;
+    N)
+      dryrun_flag=true
       ;;
     o)
       outputdir_unset=false
@@ -347,6 +352,15 @@ if $debug_flag; then
 else
   function echodebug() { true; }
 fi
+
+if $dryrun_flag; then
+  function wrap_run() { 
+    ( echo -en "[dry run]\\t" )
+    ( echo "$@" )
+  }
+else
+  function wrap_run() { "$@"; }
+fi
 ####################
 
 scriptdir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
@@ -364,6 +378,7 @@ echodebug "  * PBS_NCPUS (-c): $PBS_NCPUS"
 echodebug "  * debug_flag (-d): $debug_flag"
 echodebug "  * PYTHON_MODULE (-m): $PYTHON_MODULE"
 echodebug "  * PBS_NODES (-n): $PBS_NODES"
+echodebug "  * dryrun_flag (-N): $dryrun_flag"
 echodebug "  * PYTHON_VERSION (-p): $PYTHON_VERSION"
 echodebug "  * PBS_PPN (-P): $PBS_PPN"
 echodebug "  * PBS_QUEUE (-q): $PBS_QUEUE"
@@ -444,17 +459,18 @@ while read -r infile; do
 
   # qsub -N <pbsjobname> -q cpuq -- \
   #   <scriptdir>/job_hpc.sh -v <venv_path> -i <input_file> -o <output_dir>
-  set -x
-  qsub -N "$pbsjobname" -q "$PBS_QUEUE" "${pbsoptions[@]:-}" -- \
-   "$scriptdir/job_hpc.sh" \
-     ${compression_flag:-} \
-     ${debug_flag_job:-} \
-     -v "$VENV_PATH" \
-     -i "$infile" \
-     -m "$reference_module" \
-     -o "$OUTPUTDIR" \
-     -p "$PYTHON_VERSION" \
-      "$JOBNAME" "${jobargs[@]:-}"
+  if $debug_flag; then { set -x; }  fi
+  wrap_run \
+    qsub -N "$pbsjobname" -q "$PBS_QUEUE" "${pbsoptions[@]:-}" -- \
+     "$scriptdir/job_hpc.sh" \
+       ${compression_flag:-} \
+       ${debug_flag_job:-} \
+       -v "$VENV_PATH" \
+       -i "$infile" \
+       -m "$reference_module" \
+       -o "$OUTPUTDIR" \
+       -p "$PYTHON_VERSION" \
+        "$JOBNAME" "${jobargs[@]:-}"
   set +x
 
 done < "$INPUT_LIST"
