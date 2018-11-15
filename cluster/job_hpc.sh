@@ -89,8 +89,9 @@ function check_choices() {
 function short_usage() {
   (>&2 echo \
 "Usage:
-  job_wikilink_extraction_hpc.sh [options] ( -b | -z ) -i INPUTFILE
-                                 -o OUTPUTDIR JOBNAME [jobargs]"
+  job_hpc.sh [options] ( -b | -z ) -i INPUTFILE
+                                   -o OUTPUTDIR
+                                   JOBNAME [jobargs]"
   )
 }
 
@@ -242,13 +243,14 @@ JOBNAME="${*:$OPTIND:1}"
 check_choices "$JOBNAME" "${JOB_CHOICES[*]}"
 IFS=" " read -r -a jobargs <<< "${@:$OPTIND+1}"
 
+
 if [ -z "$PYTHON_MODULE" ]; then
   reference_module="${JOB_MAP[$JOBNAME]}"
 else
   reference_module="$PYTHON_MODULE"
 fi
 
-if [ -z "$PYTHON_MODULE" ]; then
+if [ -z "$reference_module" ]; then
   (>&2 echo "Error. Could not infer PYTHON_MODULE.")
   short_usage
   exit 1
