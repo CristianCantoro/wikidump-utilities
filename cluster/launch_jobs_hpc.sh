@@ -240,8 +240,8 @@ while getopts ":bc:dhi:m:n:No:p:P:q:v:w:z" opt; do
       pyver="$OPTARG"
 
       if ! command -v "python${pyver}" >/dev/null; then
-        (2>& echo "Error. version $pyver of Python you requested seems not " )
-        (2>& echo "to be installed on this system." )
+        (>&2 echo "Error. version $pyver of Python you requested seems not " )
+        (>&2 echo "to be installed on this system." )
         exit 1
       fi
 
@@ -427,11 +427,11 @@ if $debug_flag; then
 fi
 
 declare -a pbsoptions
-if [ ! -z "$PBS_WALLTIME" ]; then
+if [ -n "$PBS_WALLTIME" ]; then
   pbsoptions+=('-l' "walltime=$PBS_WALLTIME")
 fi
 
-if [ ! -z "$PBS_NODES" ]; then
+if [ -n "$PBS_NODES" ]; then
   pbsoptions+=('-l' "nodes=$PBS_NODES:ncpus=$PBS_NCPUS:ppn=$PBS_PPN")
 fi
 
@@ -460,8 +460,10 @@ while read -r infile; do
   # qsub -N <pbsjobname> -q cpuq -- \
   #   <scriptdir>/job_hpc.sh -v <venv_path> -i <input_file> -o <output_dir>
   if $debug_flag; then { set -x; }  fi
+
+  # shellcheck disable=SC2068
   wrap_run \
-    qsub -N "$pbsjobname" -q "$PBS_QUEUE" "${pbsoptions[@]:-}" -- \
+  qsub -N "$pbsjobname" -q "$PBS_QUEUE" ${pbsoptions[@]:-} -- \
      "$scriptdir/job_hpc.sh" \
        ${compression_flag:-} \
        ${debug_flag_job:-} \
