@@ -106,7 +106,8 @@ Arguments:
   -i INPUTFILE        Absolute path of the input file.
   -o OUTPUTDIR        Absolute path of the output directory.
   JOBNAME             Jobname to execute, choose from {extract-wikilinks,
-                      extract-redirects, extract-revisionlist, extract-snapshot}.
+                      extract-redirects, extract-revisionlist, extract-snapshot,
+                      extract-link-snapshot}.
 
 Options:
   -b                  Use bz2 compression for the output, incompatible with -z
@@ -129,6 +130,7 @@ declare -A JOB_MAP=( ['extract-wikilinks']='wikidump' \
                      ['extract-redirects']='wikidump' \
                      ['extract-revisionlist']='wikidump' \
                      ['extract-snapshot']='graphsnapshot' \
+                     ['extract-link-snapshot']='graphsnapshot' \
                      )
 
 declare -a JOB_CHOICES=()
