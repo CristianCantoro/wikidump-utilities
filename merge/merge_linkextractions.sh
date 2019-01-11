@@ -62,8 +62,8 @@ rm -f "link_snapshot.$DATE.csv.tmp"
 firstline=true
 grep ".$DATE.csv.gz" "$input" | while read -r link_file; do
   if $firstline; then
-    zcat "$link_file" | head -n1 >> "link_snapshot.$DATE.csv.tmp"
-    firstline=''
+    zcat "$link_file" | head -n1 >> "link_snapshot.$DATE.csv.tmp" || true
+    firstline=false
   fi
 
   if $verbose; then
