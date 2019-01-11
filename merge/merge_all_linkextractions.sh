@@ -10,8 +10,8 @@ fi
 readarray dates < "$1"
 
 OLD_PWD=$PWD
-OUTPUT_DIR="/tmp/cristian.consonni/shared/output"
-GRAPHS_DIR="$OUTPUT_DIR/clustersci-graphsnapshot-linkextractor-output/graphs"
+OUTPUT_DIR="$2"
+GRAPHS_DIR="$OUTPUT_DIR/graphs"
 
 for dd in "${dates[@]}"; do
     echo -n "$dd"
