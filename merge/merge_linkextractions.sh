@@ -1,4 +1,15 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC2128
+SOURCED=false && [ "$0" = "$BASH_SOURCE" ] || SOURCED=true
+
+if ! $SOURCED; then
+  set -euo pipefail
+  IFS=$'\n\t'
+fi
+
+output_compression=false
+verbose=false
+input=''
 
 eval "$(docopts -V - -h - : "$@" <<EOF
 Usage: merge_snapshots.sh [options] --input INPUT_FILE DATE
@@ -38,7 +49,7 @@ if $verbose; then
     echo "date: $DATE"
     echo "input: $input"
 
-    if [[ ! -z $compression_command ]]; then
+    if [[ -n "$compression_command" ]]; then
         echo -n "output compression: $output_compression"
         echo    " - compression commnand: $compression_command"
     else
@@ -47,12 +58,14 @@ if $verbose; then
 fi
 
 echo "$DATE -> links_snapshot.$DATE.csv.gz"
-rm links_snapshot.$DATE.csv.tmp
+rm "links_snapshot.$DATE.csv.tmp"
 
-for link_file in $(grep ".$DATE.csv.gz" $input); do
+grep ".$DATE.csv.gz" "$input " | while read -r link_file; do
     echo "zcat $link_file | tail -n+2 >> links_snapshot.$DATE.csv.tmp"
-    zcat $link_file | tail -n+2 >> links_snapshot.$DATE.csv.tmp
+    zcat "$link_file" | tail -n+2 >> "links_snapshot.$DATE.csv.tmp"
 done
 
-sort -n -k1 links_snapshot.$DATE.csv.tmp | $output_compression > link_snapshot.$DATE.csv.gz
-rm links_snapshot.$DATE.csv.tmp
+sort -n -k1 "links_snapshot.$DATE.csv.tmp" | $output_compression > "link_snapshot.$DATE.csv.gz"
+rm "links_snapshot.$DATE.csv.tmp"
+
+exit 0
