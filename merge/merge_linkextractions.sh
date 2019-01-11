@@ -49,31 +49,31 @@ if $verbose; then
   echo "input: $input"
 
   if [[ -n "$compression_command" ]]; then
-      echo -n "output compression: $output_compression"
-      echo    " - compression commnand: $compression_command"
+    echo -n "output compression: $output_compression"
+    echo    " - compression commnand: $compression_command"
   else
-      echo "ouput compression: None"
+    echo "ouput compression: None"
   fi
 fi
 
-echo "$DATE -> links_snapshot.$DATE.csv.gz"
-rm -f "links_snapshot.$DATE.csv.tmp"
+echo "$DATE -> link_snapshot.$DATE.csv.gz"
+rm -f "link_snapshot.$DATE.csv.tmp"
 
 firstline=true
 grep ".$DATE.csv.gz" "$input" | while read -r link_file; do
   if $firstline; then
-    zcat "$link_file" | head -n1 >> "links_snapshot.$DATE.csv.tmp"
-    firstline=false
+    zcat "$link_file" | head -n1 >> "link_snapshot.$DATE.csv.tmp"
+    firstline=''
   fi
 
   if $verbose; then
-    echo "zcat $link_file | tail -n+2 >> links_snapshot.$DATE.csv.tmp"
+    echo "zcat $link_file | tail -n+2 >> link_snapshot.$DATE.csv.tmp"
   fi
-  zcat "$link_file" | tail -n+2 >> "links_snapshot.$DATE.csv.tmp"
+  zcat "$link_file" | tail -n+2 >> "link_snapshot.$DATE.csv.tmp"
 done
 
-sort -n -k1 "links_snapshot.$DATE.csv.tmp" | \
+sort -n -k1 "link_snapshot.$DATE.csv.tmp" | \
   $output_compression > "link_snapshot.$DATE.csv.gz"
-rm "links_snapshot.$DATE.csv.tmp"
+rm "link_snapshot.$DATE.csv.tmp"
 
 exit 0
