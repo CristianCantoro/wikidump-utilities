@@ -132,6 +132,7 @@ Options:
   -b                  Use bz2 compression for the output [default: 7z compression].
   -c PBS_NCPUS        Number of PBS cpus to request (needs also -n and -P to be specified).
   -d                  Enable debug output.
+  -H PBS_HOST         PBS host to run on.
   -m PYTHON_MODULE    Python module to use to lauch the job [default: infer from jobname].
   -n PBS_NODES        Number of PBS nodes to request (needs also -c  and -P to be specified).
   -N                  Dry run, do not really launch the jobs.
@@ -197,7 +198,7 @@ PBS_NODES=''
 PBS_PPN=''
 PBS_WALLTIME=''
 
-while getopts ":bc:dhi:m:n:No:p:P:q:v:w:z" opt; do
+while getopts ":bc:dhH:i:m:n:No:p:P:q:v:w:z" opt; do
   case $opt in
     b)
       bz2_compression=true
@@ -207,6 +208,9 @@ while getopts ":bc:dhi:m:n:No:p:P:q:v:w:z" opt; do
 
       pbs_ncpus_set=true
       PBS_NCPUS="$OPTARG"
+      ;;
+    H)
+      PBS_HOST="$OPTARG"
       ;;
     i)
       inputlist_unset=false
@@ -378,6 +382,7 @@ echodebug "Options:"
 echodebug "  * bz2_compression (-b): $bz2_compression"
 echodebug "  * PBS_NCPUS (-c): $PBS_NCPUS"
 echodebug "  * debug_flag (-d): $debug_flag"
+echodebug "  * PBS_HOST (-H): $PBS_HOST"
 echodebug "  * PYTHON_MODULE (-m): $PYTHON_MODULE"
 echodebug "  * PBS_NODES (-n): $PBS_NODES"
 echodebug "  * dryrun_flag (-N): $dryrun_flag"
@@ -435,6 +440,10 @@ fi
 
 if [ -n "$PBS_NODES" ]; then
   pbsoptions+=('-l' "nodes=$PBS_NODES:ncpus=$PBS_NCPUS:ppn=$PBS_PPN")
+fi
+
+if [ -n "$PBS_HOST" ]; then
+  pbsoptions+=('-l' "host=$PBS_HOST")
 fi
 
 while read -r infile; do
