@@ -7,21 +7,30 @@ if ! $SOURCED; then
   IFS=$'\n\t'
 fi
 
+scratch=$(mktemp -d -t tmp.merge_linkextractions.XXXXXXXXXX)
+function finish {
+  rm -rf "$scratch"
+}
+trap finish EXIT
+
 output_compression=false
 verbose=false
 input=''
+lang='en'
 
 eval "$(docopts -V - -h - : "$@" <<EOF
-Usage: merge_linkextractions.sh [options] --input INPUT_FILE DATE
+Usage: merge_linkextractions.sh [options] --input INPUT_FILE --lang LANG DATE
 
       DATE                                  Date to merge
-      --input INPUT_FILE                    Input file with list
-      --dry-run                             Do not output any file
-      --output-compression {gzip,7z,None}   Output compression format
+      --input INPUT_FILE                    Input file with list.
+      --lang LANG                           Language to process,i.e. prefix
+                                            of the output filename [default: en].
+      --dry-run                             Do not output any file.
+      --output-compression {gzip,7z,None}   Output compression format.
                                             (default: None).
       -v, --verbose                         Verbose output.
       -h, --help                            Show this help message and exits.
-      --version                             Print version and copyright
+      --version                             Print version and copyright.
                                             information.
 ----
 merge_snapshots.sh 0.2.0
@@ -47,6 +56,7 @@ esac
 if $verbose; then
   echo "date: $DATE"
   echo "input: $input"
+  echo "lang: $lang"
 
   if [[ -n "$compression_command" ]]; then
     echo -n "output compression: $output_compression"
@@ -54,26 +64,29 @@ if $verbose; then
   else
     echo "ouput compression: None"
   fi
+
+  echo "temporary directory: $scratch"
 fi
 
-echo "$DATE -> link_snapshot.$DATE.csv.gz"
-rm -f "link_snapshot.$DATE.csv.tmp"
+outfile_name="${lang}link_snapshot.$DATE.csv.gz"
+tmpfile="${scratch}/${lang}link_snapshot.$DATE.csv.tmp"
+
+echo "$DATE -> $outfile_name"
 
 firstline=true
 grep ".$DATE.csv.gz" "$input" | while read -r link_file; do
   if $firstline; then
-    zcat "$link_file" | head -n1 >> "link_snapshot.$DATE.csv.tmp" || true
+    zcat "$link_file" | head -n1 >> "$tmpfile" || true
     firstline=false
   fi
 
   if $verbose; then
-    echo "zcat $link_file | tail -n+2 >> link_snapshot.$DATE.csv.tmp"
+    echo "zcat $link_file | tail -n+2 >> $tmpfile"
   fi
-  zcat "$link_file" | tail -n+2 >> "link_snapshot.$DATE.csv.tmp"
+  zcat "$link_file" | tail -n+2 >> "$tmpfile"
 done
 
-sort -n -k1 "link_snapshot.$DATE.csv.tmp" | \
-  $output_compression > "link_snapshot.$DATE.csv.gz"
-rm "link_snapshot.$DATE.csv.tmp"
+sort -n -k1 "$tmpfile" | \
+  $output_compression > "$outfile_name"
 
 exit 0
