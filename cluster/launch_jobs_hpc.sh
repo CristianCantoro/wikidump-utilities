@@ -197,6 +197,7 @@ PBS_NCPUS=''
 PBS_NODES=''
 PBS_PPN=''
 PBS_WALLTIME=''
+PBS_HOST=''
 
 while getopts ":bc:dhH:i:m:n:No:p:P:q:v:w:z" opt; do
   case $opt in
