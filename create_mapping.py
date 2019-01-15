@@ -102,7 +102,6 @@ if __name__ == '__main__':
     else:
         outfile = output.open('w+')
 
-    import ipdb; ipdb.set_trace()
     graphreader = csv.reader(graphfile, delimiter=args.graph_delimiter)
     snapshotreader = csv.reader(snapshotfile, delimiter=args.snapshot_delimiter)
     if args.skip_graph_header:
