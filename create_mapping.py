@@ -68,7 +68,10 @@ if __name__ == '__main__':
                         help="Snapshot file delimiter [default: ','].")
     parser.add_argument('--map',
                         action='store_true',
-                        help='Create a file name with old and new ids.')
+                        help='Create a file with old and new ids.')
+    parser.add_argument('--name',
+                        action='store_true',
+                        help='Create a file with the graph with names.')
     parser.add_argument('-o', '--output',
                         type=pathlib.Path,
                         help='Output file name [default: stdout].')
@@ -161,30 +164,31 @@ if __name__ == '__main__':
             nodsnap[nid] = v
             newsnapshot.writerow((nid, v))
 
-    tmpsl = set()
-    newtmpsl = set()
-    ssfname = 'wikigraph.name.{}.csv'.format(date.strftime('%Y-%m-%d'))
-    with open(ssfname , 'w+') as snapshotnamefile:
-        snapshotname = csv.writer(snapshotnamefile, delimiter='\t')
+    if args.name:
+        tmpsl = set()
+        newtmpsl = set()
+        ssfname = 'wikigraph.name.{}.csv'.format(date.strftime('%Y-%m-%d'))
+        with open(ssfname , 'w+') as snapshotnamefile:
+            snapshotname = csv.writer(snapshotnamefile, delimiter='\t')
 
-        for e1, e2 in graph:
-            en1 = odsnap[e1]
-            en2 = odsnap[e2]
+            for e1, e2 in graph:
+                en1 = odsnap[e1]
+                en2 = odsnap[e2]
 
-            ne1 = idmap[e1]
-            ne2 = idmap[e2]
+                ne1 = idmap[e1]
+                ne2 = idmap[e2]
 
-            nen1 = nodsnap[ne1]
-            nen2 = nodsnap[ne2]
+                nen1 = nodsnap[ne1]
+                nen2 = nodsnap[ne2]
 
-            tmpsl.add((en1, en2))
-            newtmpsl.add((nen1, nen2))
+                tmpsl.add((en1, en2))
+                newtmpsl.add((nen1, nen2))
 
-            snapshotname.writerow((en1, en2))
+                snapshotname.writerow((en1, en2))
 
-    assert tmpsl == newtmpsl
-    del tmpsl
-    del newtmpsl
+        assert tmpsl == newtmpsl
+        del tmpsl
+        del newtmpsl
 
     if args.oldmap:
         newcounter = 0
