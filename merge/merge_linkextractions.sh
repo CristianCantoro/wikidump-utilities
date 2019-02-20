@@ -43,7 +43,7 @@ EOF
 
 case "$output_compression" in
   "gzip")
-      compression_command='gzip'
+      compression_command='gzip --to-stdout'
       ;;
   "7z")
       compression_command='7z a -si'
@@ -99,10 +99,12 @@ sort \
   --field-separator=',' \
   --numeric-sort \
   --key=1 \
-  --parallel=$((NPROCS-1)) \
-  --buffer-size=$((TOTMEMGB/NPROCS)) \
-    "$tmpfile" | \
-  $output_compression > "$outfile_name"
+  --parallel="$((NPROCS-1))" \
+  --buffer-size="$((TOTMEMGB/NPROCS))G" \
+  --output="${tmpfile}.sort" \
+    "$tmpfile"
 set +x
+
+$output_compression "${tmpfile}.sort" > "$outfile_name"
 
 exit 0
