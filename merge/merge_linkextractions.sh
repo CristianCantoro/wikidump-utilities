@@ -86,7 +86,23 @@ grep ".$DATE.csv.gz" "$input" | while read -r link_file; do
   zcat "$link_file" | tail -n+2 >> "$tmpfile"
 done
 
-sort -n -k1 "$tmpfile" | \
+# How to obtain the number of CPUs/cores in Linux from the command line?
+# https://stackoverflow.com/q/6481005/2377454
+NPROCS="$(grep -c '^processor' /proc/cpuinfo)"
+_totmemkb="$(cat /proc/meminfo | grep MemTotal | awk '{print $2}')"
+TOTMEMGB=$((_totmemkb/(1024*1024)))
+
+set -x
+# Parallel sort
+# https://superuser.com/q/938558/469670
+sort \
+  --field-separator=',' \
+  --numeric-sort \
+  --key=1 \
+  --parallel=$((NPROC-1)) \
+  --buffer-size=$((TOTMEMGB/NPROCS)) \
+    "$tmpfile" | \
   $output_compression > "$outfile_name"
+set +x
 
 exit 0
