@@ -51,18 +51,6 @@ if $verbose; then
 fi
 
 outfile_name="${lang}wiki.link_snapshot.$DATE.csv"
-case "$output_compression" in
-  "gzip")
-      outfile_name="${outfile_name}.gz"
-      ;;
-  "7z")
-      outfile_name="${outfile_name}.7z"
-      ;;
-  *)
-      true
-      ;;
-esac
-
 tmpfile="${scratch}/${lang}link_snapshot.$DATE.csv.tmp"
 
 echo "$DATE -> $outfile_name"
@@ -102,10 +90,11 @@ set +x
 case "$output_compression" in
   "gzip")
       gzip "${tmpfile}.sort"
-      mv "${tmpfile}.sort.gz" "$outfile_name"
+      mv "${tmpfile}.sort.gz" "${outfile_name}.gz"
       ;;
   "7z")
-      7z a "$outfile_name" "${tmpfile}.sort"
+      mv "${tmpfile}.sort" "${scratch}/${outfile_name}"
+      7z a "${outfile_name}.7z" "${scratch}/${outfile_name}"
       ;;
   *)
       mv "${tmpfile}.sort" "$outfile_name"
