@@ -50,7 +50,19 @@ if $verbose; then
   echo "temporary directory: $scratch"
 fi
 
-outfile_name="${lang}link_snapshot.$DATE.csv.gz"
+outfile_name="${lang}wiki.link_snapshot.$DATE.csv"
+case "$output_compression" in
+  "gzip")
+      outfile_name="${outfile_name}.gz"
+      ;;
+  "7z")
+      outfile_name="${outfile_name}.7z"
+      ;;
+  *)
+      true
+      ;;
+esac
+
 tmpfile="${scratch}/${lang}link_snapshot.$DATE.csv.tmp"
 
 echo "$DATE -> $outfile_name"
