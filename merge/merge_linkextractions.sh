@@ -41,29 +41,11 @@ There is NO WARRANTY, to the extent permitted by law.
 EOF
 )"
 
-case "$output_compression" in
-  "gzip")
-      compression_command='gzip --to-stdout'
-      ;;
-  "7z")
-      compression_command='7z a -si'
-      ;;
-  *)
-      unset compression_commnad
-      ;;
-esac
-
 if $verbose; then
   echo "date: $DATE"
   echo "input: $input"
   echo "lang: $lang"
-
-  if [[ -n "$compression_command" ]]; then
-    echo -n "output compression: $output_compression"
-    echo    " - compression commnand: $compression_command"
-  else
-    echo "ouput compression: None"
-  fi
+  echo "output_compression: $output_compression"
 
   echo "temporary directory: $scratch"
 fi
@@ -105,6 +87,17 @@ sort \
     "$tmpfile"
 set +x
 
-$output_compression "${tmpfile}.sort" > "$outfile_name"
+case "$output_compression" in
+  "gzip")
+      gzip "${tmpfile}.sort"
+      mv "${tmpfile}.sort.gz" "$outfile_name"
+      ;;
+  "7z")
+      7z a "$outfile_name" "${tmpfile}.sort"
+      ;;
+  *)
+      mv "${tmpfile}.sort" "$outfile_name"
+      ;;
+esac
 
 exit 0
