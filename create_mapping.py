@@ -187,7 +187,7 @@ if __name__ == '__main__':
 
 
     nodsnap = dict()
-    nsfname = '{}lang.wikigraph.snapshot.{}.csv'.format(lang,
+    nsfname = '{}wiki.wikigraph.snapshot.{}.csv'.format(lang,
                                                         date.strftime('%Y-%m-%d')
                                                         )
     with open(nsfname, 'w+') as newsnapshotfile:
