@@ -5,7 +5,7 @@ Example:
     ./create_mapping.py --oldmap 
                         -g wikilink_graph.2005-12-15.csv 
                         -s snapshot.2005-12-15.csv
-                        2005-12-15
+                        2005-12-15 en
 
 """
 
@@ -58,6 +58,9 @@ if __name__ == '__main__':
     parser.add_argument('date',
                         type=valid_date,
                         help='Reference date, used for file names.')
+    parser.add_argument('lang',
+                        type=str,
+                        help='Two-letter language code.')
     parser.add_argument('--graph-delimiter',
                         type=str,
                         default=' ',
@@ -95,6 +98,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     date = args.date
+    lang = args.lang
 
     graphfile = args.graph.open('r')
     snapshotfile = args.snapshot.open('r')
@@ -113,6 +117,9 @@ if __name__ == '__main__':
         next(snapshotreader)
 
     graph = uniqfy_list(((int(e[0]),int(e[1])) for e in graphreader))
+    graph_numedges = len(graph)
+    graph_numnodes = len(set([node for edge in graph
+                              for node in edge])) + 1
 
     tmpsnap = [(int(line[0]), line[1])
                for line in snapshotreader]
@@ -130,14 +137,18 @@ if __name__ == '__main__':
     for newid, oldid in enodsnap:
         idmap[oldid] = newid
 
-    imfname = 'idmap_o2n.{}.csv'.format(date.strftime('%Y-%m-%d'))
+    imfname = '{}wiki.idmap_o2n.{}.csv'.format(lang,
+                                               date.strftime('%Y-%m-%d')
+                                               )
     with open(imfname, 'w+') as idmapfile:
         idmap_csv = csv.writer(idmapfile, delimiter=' ')
 
         for oid, nid in idmap.items():
             idmap_csv.writerow((oid, nid))
 
-    gsfname = 'wikigraph.shift.{}.csv'.format(date.strftime('%Y-%m-%d'))
+    gsfname = '{}wiki.wikigraph.shift.{}.csv'.format(lang,
+                                                     date.strftime('%Y-%m-%d')
+                                                     )
     with open(gsfname, 'w+') as graphshiftfile:
         graphshift = csv.writer(graphshiftfile, delimiter='\t')
 
@@ -153,8 +164,32 @@ if __name__ == '__main__':
 
             graphshift.writerow((nid1, nid2))
 
+    prname = '{}wiki.wikigraph.pagerank.{}.csv'.format(lang,
+                                                    date.strftime('%Y-%m-%d')
+                                                    )
+    with open(prname, 'w+') as pagerankfile:
+        pagerank = csv.writer(pagerankfile, delimiter=' ')
+        with open(gsfname, 'r') as graphshiftfile:
+            graphshift = csv.reader(graphshiftfile, delimiter='\t')
+            shift = [(int(e1), int(e2)) for e1, e2 in graphshift]
+            shift_numedges = len(shift)
+            shift_numnodes = len(set([node for edge in graph
+                                      for node in edge])) + 1
+
+            assert graph_numedges == shift_numedges
+            assert graph_numnodes == shift_numnodes
+            pagerank.writerow((shift_numedges, shift_numnodes))
+
+        with open(gsfname, 'r') as graphshiftfile:
+            graphshift = csv.reader(graphshiftfile, delimiter='\t')
+            for l1, l2 in graphshift:
+                pagerank.writerow((l1, l1))
+
+
     nodsnap = dict()
-    nsfname = 'wikigraph.snapshot.{}.csv'.format(date.strftime('%Y-%m-%d'))
+    nsfname = '{}lang.wikigraph.snapshot.{}.csv'.format(lang,
+                                                        date.strftime('%Y-%m-%d')
+                                                        )
     with open(nsfname, 'w+') as newsnapshotfile:
         newsnapshot = csv.writer(newsnapshotfile, delimiter='\t')
 
@@ -167,7 +202,9 @@ if __name__ == '__main__':
     if args.name:
         tmpsl = set()
         newtmpsl = set()
-        ssfname = 'wikigraph.name.{}.csv'.format(date.strftime('%Y-%m-%d'))
+        ssfname = '{}wiki.wikigraph.name.{}.csv'.format(lang,
+                                                        date.strftime('%Y-%m-%d')
+                                                        )
         with open(ssfname , 'w+') as snapshotnamefile:
             snapshotname = csv.writer(snapshotnamefile, delimiter='\t')
 
@@ -203,7 +240,9 @@ if __name__ == '__main__':
                 idmap_o2n[e2] = newcounter
                 newcounter = newcounter + 1
 
-        omgfname = 'oldmap.{}.csv'.format(date.strftime('%Y-%m-%d'))
+        omgfname = '{}wiki.oldmap.{}.csv'.format(lang,
+                                                 date.strftime('%Y-%m-%d')
+                                                 )
         with open(omgfname, 'w+') as oldmapgraphfile:
             oldmapgraph = csv.writer(oldmapgraphfile, delimiter='\t')
 
