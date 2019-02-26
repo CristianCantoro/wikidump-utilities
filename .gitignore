@@ -1,2 +1,5 @@
 # ignore .csv files
 *.csv
+
+# ignore example_data folder
+example_data/
