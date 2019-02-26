@@ -2,55 +2,90 @@
 """Shift graph indexes.
 
 Usage:
-  shift_graph.py <infile>
+  shift_graph.py [options] <infile>
   shift_graph.py (-h | --help)
   shift_graph.py --version
 
 Options:
-  -h --help     Show this screen.
-  --version     Show version.
+  --only-id                         Input files has only ids.
+  -d, --in-delimiter DELIMITER      Input delimiter [default: \t].
+  -D, --out-delimiter DELIMITER     Output delimiter [default: \t].
+  -h --help                         Show this screen.
+  --version                         Show version.
 """
 from docopt import docopt
 import csv
 
 if __name__ == '__main__':
-    arguments = docopt(__doc__, version='shift_graph 0.1')
-    
+    arguments = docopt(__doc__, version='shift_graph 0.2')
+
     infile = arguments['<infile>']
+    in_delimiter = arguments['--in-delimiter']
+    out_delimiter = arguments['--out-delimiter']
+    only_id = arguments['--only-id']
 
     nodemap = dict()
     nodeid = 0
 
-    adate = infile.split('.')[1]
-    outfile = 'wikilink_graph.shift.{}.csv'.format(adate)
-    mapfile = 'wikilink_graph.shift-map.{}.csv'.format(adate)
+    lang = infile.split('.')[0]
+    adate = infile.split('.')[2]
+    outfile = ('{lang}.wikilink_graph.shift.{adate}.csv'
+               .format(lang=lang,adate=adate)
+               )
+    oidfile = ('{lang}.wikilink_graph.{adate}.onlyid.csv'
+               .format(lang=lang,adate=adate)
+               )
+    mapfile = ('{lang}.wikilink_graph.shift-map.{adate}.csv'
+               .format(lang=lang,adate=adate)
+               )
 
+    is_header = True
     with open(infile, 'r') as infp:
+        reader = csv.reader(infp, delimiter=in_delimiter)
+
         with open(outfile, 'w+') as outfp:
-            writer = csv.writer(outfp,delimiter='\t')
-            for line in infp.readlines():
-                source, target = line.strip().split()
+            with open(oidfile, 'w+') as oidfp:
+                outwriter = csv.writer(outfp, delimiter=out_delimiter)
+                oidwriter = csv.writer(oidfp, delimiter=out_delimiter)
+                for line in reader:
 
-                source = int(source)
-                target = int(target)
-                shiftsource = -1
-                shifttarget = -1
+                    if only_id:
+                        sourceid = line[0]
+                        targetid = line[1]
+                    else:
+                        sourceid = line[0]
+                        sourcetitle = line[1]
+                        targetid = line[2]
+                        targettitle = line[3]
 
-                if source not in nodemap:
-                    shiftsource = nodeid
-                    nodemap[source] = nodeid
-                    nodeid = nodeid + 1
-                else:
-                    shiftsource = nodemap[source]
+                    if is_header:
+                        outwriter.writerow([sourceid, targetid])
+                        oidwriter.writerow([sourceid, targetid])
+                        is_header = False
+                        continue
 
-                if target not in nodemap:
-                    shifttarget = nodeid
-                    nodemap[target] = nodeid
-                    nodeid = nodeid + 1
-                else:
-                    shifttarget = nodemap[target]
+                    sourceid = int(sourceid)
+                    targetid = int(targetid)
+                    shiftsourceid = -1
+                    shifttargetid = -1
 
-                writer.writerow([shiftsource, shifttarget])
+                    if sourceid not in nodemap:
+                        shiftsourceid = nodeid
+                        nodemap[sourceid] = nodeid
+                        nodeid = nodeid + 1
+                    else:
+                        shiftsourceid = nodemap[sourceid]
+
+                    if targetid not in nodemap:
+                        shifttargetid = nodeid
+                        nodemap[targetid] = nodeid
+                        nodeid = nodeid + 1
+                    else:
+                        shifttargetid = nodemap[targetid]
+
+                    outwriter.writerow([shiftsourceid, shifttargetid])
+                    oidwriter.writerow([sourceid, targetid])
+
 
     with open(mapfile, 'w+') as mapfp:
         mapwriter = csv.writer(mapfp, delimiter='\t')
