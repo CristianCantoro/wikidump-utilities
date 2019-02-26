@@ -183,7 +183,7 @@ if __name__ == '__main__':
         with open(gsfname, 'r') as graphshiftfile:
             graphshift = csv.reader(graphshiftfile, delimiter='\t')
             for l1, l2 in graphshift:
-                pagerank.writerow((l1, l1))
+                pagerank.writerow((l1, l2))
 
 
     nodsnap = dict()
