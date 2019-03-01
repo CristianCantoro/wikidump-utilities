@@ -178,7 +178,12 @@ if __name__ == '__main__':
                                ])
             shift_numedges = len(shift)
             shift_numnodes = len(shift_nodes)
-            shift_maxindex = max(shift_nodes) + 1
+
+            # if shift_nodes is empty, max causes an error
+            if shift_nodes:
+                shift_maxindex = max(shift_nodes) + 1
+            else:
+                shift_maxindex = 0
 
             del shift
             del shift_nodes
