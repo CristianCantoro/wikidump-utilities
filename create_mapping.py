@@ -178,7 +178,7 @@ if __name__ == '__main__':
 
             assert graph_numedges == shift_numedges
             assert graph_numnodes == shift_numnodes
-            pagerank.writerow((shift_numedges, shift_numnodes))
+            pagerank.writerow((shift_numnodes, shift_numedges))
 
         with open(gsfname, 'r') as graphshiftfile:
             graphshift = csv.reader(graphshiftfile, delimiter='\t')
