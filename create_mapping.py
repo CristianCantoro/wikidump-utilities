@@ -119,7 +119,7 @@ if __name__ == '__main__':
     graph = uniqfy_list(((int(e[0]),int(e[1])) for e in graphreader))
     graph_numedges = len(graph)
     graph_numnodes = len(set([node for edge in graph
-                              for node in edge])) + 1
+                              for node in edge]))
 
     tmpsnap = [(int(line[0]), line[1])
                for line in snapshotreader]
@@ -172,13 +172,21 @@ if __name__ == '__main__':
         with open(gsfname, 'r') as graphshiftfile:
             graphshift = csv.reader(graphshiftfile, delimiter='\t')
             shift = [(int(e1), int(e2)) for e1, e2 in graphshift]
+            shift_nodes = set([node
+                               for edge in shift
+                               for node in edge
+                               ])
             shift_numedges = len(shift)
-            shift_numnodes = len(set([node for edge in graph
-                                      for node in edge])) + 1
+            shift_numnodes = len(shift_nodes)
+            shift_maxindex = max(shift_nodes) + 1
+
+            del shift
+            del shift_nodes
 
             assert graph_numedges == shift_numedges
             assert graph_numnodes == shift_numnodes
-            pagerank.writerow((shift_numnodes, shift_numedges))
+
+            pagerank.writerow((shift_maxindex, shift_numedges))
 
         with open(gsfname, 'r') as graphshiftfile:
             graphshift = csv.reader(graphshiftfile, delimiter='\t')
